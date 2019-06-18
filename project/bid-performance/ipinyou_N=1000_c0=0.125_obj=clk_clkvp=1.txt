@@ -1,0 +1,10 @@
+setting                                                	 objective	 auction	impression	   click	    cost	 win-rate	     CPM	    eCPC
+ipinyou, camp=1458, algo=lin_bid, N=1000, c0=0.125     	        273	   349999	      51367	      273	  1265553	    14.68%	    24.64	     4.64
+ipinyou, camp=2259, algo=lin_bid, N=1000, c0=0.125     	         30	   349999	      89619	       30	  4027439	    25.61%	    44.94	   134.25
+ipinyou, camp=2261, algo=lin_bid, N=1000, c0=0.125     	         27	   343861	     117805	       27	  3715517	    34.26%	    31.54	   137.61
+ipinyou, camp=2821, algo=lin_bid, N=1000, c0=0.125     	         43	   349999	      79847	       43	  2327115	    22.81%	    29.14	    54.12
+ipinyou, camp=2997, algo=lin_bid, N=1000, c0=0.125     	        159	   156062	      71844	      159	   988917	    46.04%	    13.76	     6.22
+ipinyou, camp=3358, algo=lin_bid, N=1000, c0=0.125     	        228	   300927	      29670	      228	  1967111	     9.86%	    66.30	     8.63
+ipinyou, camp=3386, algo=lin_bid, N=1000, c0=0.125     	         90	   349999	      63273	       90	  2767996	    18.08%	    43.75	    30.76
+ipinyou, camp=3427, algo=lin_bid, N=1000, c0=0.125     	        202	   349999	      41241	      202	  1989738	    11.78%	    48.25	     9.85
+ipinyou, camp=3476, algo=lin_bid, N=1000, c0=0.125     	        161	   349999	      39419	      161	  2098354	    11.26%	    53.23	    13.03
