@@ -1,9 +1,11 @@
 import config
 import sys
+import os
+import pickle
 from utils import Opt_Obj
 from bidding_environment import BidEnv
 from bidding_agent_linear import bidding_agent_linear
-
+from bidding_agent_rtb_rl import bidding_agent_rtb_rl
 
 obj_type = "clk"
 clk_vp = 1
@@ -33,8 +35,7 @@ for camp in camps:
     opt_obj = Opt_Obj(obj_type, int(clk_vp * camp_info["cost_train"] / camp_info["clk_train"]))
     B = int(camp_info["cost_train"] / camp_info["imp_train"] * c0 * N)
 
-    # Lin-Bid
-
+    # Linear-Bid
     env = BidEnv(camp_info, auction_in)
 
     agent = bidding_agent_linear()
@@ -57,3 +58,36 @@ for camp in camps:
     print(log)
     log_in.write(log + "\n")
 
+    # RLB
+    agent = bidding_agent_rtb_rl(camp_info, opt_obj, gamma)
+    setting = "{}, camp={}, algo={}, N={}, c0={}, obj={}, clk_v={}" \
+        .format(src, camp, "rlb_dp_fa", N, c0, obj_type, opt_obj.clk_v)
+    bid_log_path = config.projectPath + "bid-log/{}.txt".format(setting)
+
+    save_point_path = data_path + camp + "/bid-model/rlb_dnb_save_points_{}.txt".format(obj_type)
+    agent.load_save_points(save_point_path)
+
+    # model_path = data_path + camp + "/bid-model/fa_dnb_{}.pickle".format(obj_type)
+    # rlb_dp_fa.load_nn_approximator("pickle", model_path)
+
+    model_path = data_path + camp + "/bid-model/fa_dnb_{}.txt".format(obj_type)
+    agent.load_nn_approximator("txt", model_path)
+
+    bid_factor_file = data_path + camp + "/bid-model/{}_{}_{}_{}_{}.pickle".format("rlb_bid_factor", N, c0, obj_type,
+                                                                                   opt_obj.clk_v)
+    if os.path.isfile(bid_factor_file):
+        bf = pickle.load(open(bid_factor_file, "rb"))["bid-factor"]
+    else:
+        bf = 1
+
+    (auction, imp, clk, cost) = agent.run(auction_in, bid_log_path, N, c0,
+                                              max_market_price, delimiter=" ", save_log=True, bid_factor=bf)
+
+    win_rate = imp / auction * 100
+    cpm = (cost / 1000) / imp * 1000
+    ecpc = (cost / 1000) / clk
+    obj = opt_obj.get_obj(imp, clk, cost)
+    log = "{:<80}\t{:>10}\t{:>8}\t{:>10}\t{:>8}\t{:>8}\t{:>8.2f}%\t{:>8.2f}\t{:>8.2f}" \
+        .format(setting, obj, auction, imp, clk, cost, win_rate, cpm, ecpc)
+    print(log)
+    log_in.write(log + "\n")

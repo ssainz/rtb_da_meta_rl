@@ -2,14 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4086937d-1a1e-4a1f-8b54-4223eab51f0a" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/bid.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/bidding_agent.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/bidding_agent_linear.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/bidding_agent_multiagent_rl.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/bidding_agent_rtb_rl.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/bidding_environment.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/config.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/utils.py" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/data/ipinyou-data/1458/bid-model/test.lin-bid_1000_0.125_clk_86552.pickle" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bid.py" afterPath="$PROJECT_DIR$/bid.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/bidding_agent_rtb_rl.py" afterPath="$PROJECT_DIR$/bidding_agent_rtb_rl.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -35,12 +31,14 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="bidding_agent_rtb_rl.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="bidding_agent_rtb_rl.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/bidding_agent_rtb_rl.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="64" lean-forward="false" selection-start-line="0" selection-start-column="2" selection-end-line="0" selection-end-column="64" />
-              <folding />
+            <state relative-caret-position="288">
+              <caret line="16" column="0" lean-forward="true" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
+              <folding>
+                <element signature="e#132#171#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -48,8 +46,8 @@
       <file leaf-file-name="bid.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/bid.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="584">
-              <caret line="45" column="19" lean-forward="true" selection-start-line="45" selection-start-column="19" selection-end-line="45" selection-end-column="19" />
+            <state relative-caret-position="458">
+              <caret line="69" column="0" lean-forward="false" selection-start-line="69" selection-start-column="0" selection-end-line="70" selection-end-column="58" />
               <folding>
                 <element signature="e#0#13#0" expanded="true" />
               </folding>
@@ -77,11 +75,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="bidding_agent_linear.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="bidding_agent_linear.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/bidding_agent_linear.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-406">
-              <caret line="14" column="15" lean-forward="false" selection-start-line="14" selection-start-column="12" selection-end-line="14" selection-end-column="15" />
+            <state relative-caret-position="414">
+              <caret line="23" column="73" lean-forward="true" selection-start-line="23" selection-start-column="73" selection-end-line="23" selection-end-column="73" />
               <folding>
                 <element signature="e#66#105#0" expanded="true" />
               </folding>
@@ -92,8 +90,8 @@
       <file leaf-file-name="bidding_agent.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/bidding_agent.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="144">
-              <caret line="8" column="28" lean-forward="false" selection-start-line="8" selection-start-column="19" selection-end-line="8" selection-end-column="28" />
+            <state relative-caret-position="90">
+              <caret line="5" column="41" lean-forward="true" selection-start-line="5" selection-start-column="18" selection-end-line="5" selection-end-column="41" />
               <folding />
             </state>
           </provider>
@@ -131,13 +129,13 @@
       <list>
         <option value="$PROJECT_DIR$/BiddingEnvironment.py" />
         <option value="$PROJECT_DIR$/bidding_agent_multiagent_rl.py" />
-        <option value="$PROJECT_DIR$/bidding_agent_rtb_rl.py" />
         <option value="$PROJECT_DIR$/bidding_agent.py" />
         <option value="$PROJECT_DIR$/config.py" />
         <option value="$PROJECT_DIR$/bidding_environment.py" />
         <option value="$PROJECT_DIR$/utils.py" />
         <option value="$PROJECT_DIR$/bidding_agent_linear.py" />
         <option value="$PROJECT_DIR$/bid.py" />
+        <option value="$PROJECT_DIR$/bidding_agent_rtb_rl.py" />
       </list>
     </option>
   </component>
@@ -271,22 +269,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/bidding_agent_rtb_rl.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="64" lean-forward="false" selection-start-line="0" selection-start-column="2" selection-end-line="0" selection-end-column="64" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/bidding_agent.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="144">
-          <caret line="8" column="28" lean-forward="false" selection-start-line="8" selection-start-column="19" selection-end-line="8" selection-end-column="28" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/config.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="252">
@@ -313,22 +295,40 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/bidding_agent_linear.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="414">
+          <caret line="23" column="73" lean-forward="true" selection-start-line="23" selection-start-column="73" selection-end-line="23" selection-end-column="73" />
+          <folding>
+            <element signature="e#66#105#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/bidding_agent.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="5" column="41" lean-forward="true" selection-start-line="5" selection-start-column="18" selection-end-line="5" selection-end-column="41" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/bid.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="584">
-          <caret line="45" column="19" lean-forward="true" selection-start-line="45" selection-start-column="19" selection-end-line="45" selection-end-column="19" />
+        <state relative-caret-position="458">
+          <caret line="69" column="0" lean-forward="false" selection-start-line="69" selection-start-column="0" selection-end-line="70" selection-end-column="58" />
           <folding>
             <element signature="e#0#13#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/bidding_agent_linear.py">
+    <entry file="file://$PROJECT_DIR$/bidding_agent_rtb_rl.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-406">
-          <caret line="14" column="15" lean-forward="false" selection-start-line="14" selection-start-column="12" selection-end-line="14" selection-end-column="15" />
+        <state relative-caret-position="288">
+          <caret line="16" column="0" lean-forward="true" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
           <folding>
-            <element signature="e#66#105#0" expanded="true" />
+            <element signature="e#132#171#0" expanded="true" />
           </folding>
         </state>
       </provider>
