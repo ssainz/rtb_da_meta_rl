@@ -73,7 +73,7 @@ class bidding_agent_rtb_rl_fa(bidding_agent):
 
             b_bound = 800
             n_bound = 50
-            max_train_round = 500
+            max_train_round = 100
             final_model_path = NN_model_path
 
             n_sample_size = 50
@@ -103,28 +103,36 @@ class bidding_agent_rtb_rl_fa(bidding_agent):
 
             # need to split the D_function_path into one line files.
             train_dir = large_storage_folder + "/../fa-train/rlb_dnb_gamma=1_N={}_{}_1/".format(N, obj_type)
+            #print("train_dir = {}".format(train_dir))
             if not os.path.exists(train_dir):
                 os.makedirs(train_dir)
                 with open(D_function_path, "r") as fin:
                     count = 0
                     for line in fin:
                         save_path = train_dir + str(count) + ".txt"
+                        print(save_path)
                         with open(save_path, "w") as fout:
                             fout.write(line + "\n")
                         count += 1
 
             n_list = [i for i in range(n_bound + 1, N)]
 
+            #print("n_list = {}".format(n_list))
+
             # train, eval
             mode = "train"
             save_model = True
-            model_path = large_storage_folder + "/../fa-train/" + tag + "/"
-            log_path = large_storage_folder + "/../fa-log/" + tag + ".txt"
+            model_path = large_storage_folder + "../fa-train/" + tag + "/"
+            log_path = large_storage_folder + "../fa-log/" + tag + ".txt"
+            log_folder = large_storage_folder + "../fa-log/"
             if save_model and mode == "train":
                 os.mkdir(model_path)
 
-            print(tag)
-            print(nn_approx.log)
+            if not os.path.exists(log_folder):
+                os.mkdir(log_folder)
+
+            #print(tag)
+            #print(nn_approx.log)
 
             if mode == "train":
                 if save_model:
@@ -147,6 +155,7 @@ class bidding_agent_rtb_rl_fa(bidding_agent):
                         buf_labels = []
 
                         _round = int(len(n_list) / n_sample_size)
+                        #print("_round = {}".format(_round))
                         for _i in range(_round):
                             batch_n = n_list[_i * n_sample_size: (_i + 1) * n_sample_size]
                             batch_x_vecs, batch_value_labels = load_data(train_dir, batch_n, b_sample_size, b_bound,
@@ -164,6 +173,8 @@ class bidding_agent_rtb_rl_fa(bidding_agent):
                             buf_labels.extend(batch_value_labels.flatten())
                             buf_predictions.extend(batch_predictions.flatten())
                         buf_loss = np.array(buf_loss)
+                        #print("buff_loss = {}".format(buf_loss))
+                        #print("buff_predictions = {}".format(buf_predictions))
                         buf_rmse = np.sqrt(mean_squared_error(buf_labels, buf_predictions))
                         buf_log = "buf loss, max={:.6f}\tmin={:.6f}\tmean={:.6f}\tbuf rmse={}\ttime={}".format(
                             buf_loss.max(), buf_loss.min(), buf_loss.mean(), buf_rmse / avg_theta, getTime())
@@ -185,13 +196,13 @@ class bidding_agent_rtb_rl_fa(bidding_agent):
                                 nn_approx.dump(final_model_path, net_type, net_argv)
                         start_time = time.time()
                         if _iter >= max_train_round:
+                            nn_approx.dump(final_model_path, net_type, net_argv)
                             break
 
             elif mode == "eval":
                 with tf.Session(graph=nn_approx.graph) as sess:
                     tf.initialize_all_variables().run()
                     eval_rmse = evaluate_rmse(train_dir, n_list, -1, batch_size, b_bound, dim, nn_approx, echo=True)
-
                     print("campaign={}\tfull eval rmse={}".format(camp, eval_rmse / avg_theta))
 
 
@@ -322,7 +333,9 @@ class bidding_agent_rtb_rl_fa(bidding_agent):
         while not done:
 
             t0 = time.time()
+
             action = self.bid(n, b, theta, max_bid) * bid_factor
+            #print("n={}, b={}, theta={}, max_bid={}, action={}, bid_factor={}".format(n, b, theta, max_bid, action, bid_factor))
             action = min(int(action), min(b, max_bid))
 
             t1 = time.time()
@@ -332,8 +345,9 @@ class bidding_agent_rtb_rl_fa(bidding_agent):
                 log_in.write(log + "\n")
 
             done, new_theta, new_price, result_imp, result_click = self.env.step(action)
+            #print("action = {}, price = {}".format( action, price))
 
-            if result_imp == 1:
+            if result_imp > 0:
                 imp += 1
                 if result_click == 1:
                     clk += 1

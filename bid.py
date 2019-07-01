@@ -11,12 +11,13 @@ from bidding_agent_rtb_rl_fa import bidding_agent_rtb_rl_fa
 
 obj_type = "clk"
 clk_vp = 1
-N = 100
+N = 200
 c0 = 1 / 8
 gamma = 1
 
 #agents_to_execute = ['lin', 'rlb_dp_tabular']
-agents_to_execute = ['lin','rlb_rl_dp_tabular', "rlb_rl_fa"]
+#agents_to_execute = ['lin','rlb_rl_dp_tabular', "rlb_rl_fa"]
+agents_to_execute = ["rlb_rl_fa"]
 
 src = "ipinyou"
 
@@ -108,20 +109,25 @@ for camp in camps:
     # RLB-FA: real time bidding tabular function approximation.
     if 'rlb_rl_fa' in agents_to_execute:
 
+        overwrite = True
         # First train DP
         large_storage_folder = "/media/onetbssd/rlb/" + src + "/" + camp + "/bid-model/"
 
+        if not os.path.exists(large_storage_folder):
+            os.makedirs(large_storage_folder)
+
+        env = BidEnv(camp_info, aution_in_file)
         agent = bidding_agent_rtb_rl_dp_tabular()
         agent.init(env, camp_info, opt_obj, gamma)
 
         setting = "{}, camp={}, algo={}, N={}, c0={}" \
-            .format(src, camp, "rlb_rl_dp_tabular", N, c0)
+            .format(src, camp, "rlb_rl_fa", N, c0)
         bid_log_path = config.projectPath + "bid-log/{}.txt".format(setting)
 
         # Approximating D function
         m_pdf = calc_m_pdf(camp_info["price_counter_train"])
         D_function_path = large_storage_folder + "rlb_dnb_gamma={}_N={}_{}.txt".format(gamma, N, obj_type)
-        if not os.path.isfile(D_function_path):
+        if (not os.path.isfile(D_function_path)) or overwrite:
             # print("START: Approximating V function by dynamic programming... ")
             agent.calc_Dnb(N, B, max_market_price, m_pdf, D_function_path)
             # print("END: Approximating V function by dynamic programming.")
@@ -129,16 +135,16 @@ for camp in camps:
 
         # Then train a NN using the Dnd function
         NN_model_path = large_storage_folder + "fa_dnb_gamma={}_N={}_{}.pickle".format(gamma, N, obj_type)
-        if not os.path.isfile(NN_model_path):
+        if (not os.path.isfile(NN_model_path)) or overwrite:
             agent = bidding_agent_rtb_rl_fa()
-            agent.init(env, camp_info, opt_obj, gamma)
+            agent.init(env, camp_info, gamma, opt_obj)
             agent.approximate("dnb", src, camp, N, D_function_path, large_storage_folder, NN_model_path)
 
 
         # Then use it
         env = BidEnv(camp_info, aution_in_file)
         agent = bidding_agent_rtb_rl_fa()
-        agent.init(env, camp_info, opt_obj, gamma)
+        agent.init(env, camp_info, gamma, opt_obj)
 
         agent.load_nn_approximator("pickle", NN_model_path)
 
@@ -154,8 +160,8 @@ for camp in camps:
                                                   max_market_price, save_log=True, bid_factor=bf)
 
         win_rate = imp / auction * 100
-        cpm = (cost / 1000) / imp * 1000
-        ecpc = (cost / 1000) / clk
+        cpm = (cost / 1000) / (imp + 1.0e-14) * 1000
+        ecpc = (cost / 1000) / (clk + 1.0e-14)
         obj = opt_obj.get_obj(imp, clk, cost)
         log = "{:<80}\t{:>10}\t{:>8}\t{:>10}\t{:>8}\t{:>8}\t{:>8.2f}%\t{:>8.2f}\t{:>8.2f}" \
             .format(setting, obj, auction, imp, clk, cost, win_rate, cpm, ecpc)
