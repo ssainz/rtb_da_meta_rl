@@ -53,7 +53,7 @@ class bidding_agent_linear(bidding_agent):
                     tune_list.append((bc, perf))
             self.b0 = bb
             pickle.dump({"b0": self.b0, "best_obj": obj, "tune_list": tune_list}, open(save_path, "wb"))
-            print("Lin-Bid parameter tune: b0={}, best_obj={} and save in {}".format(self.b0, obj, save_path))
+            #print("Lin-Bid parameter tune: b0={}, best_obj={} and save in {}".format(self.b0, obj, save_path))
 
     def run(self, bid_log_path, N, c0, max_bid, save_log=False):
 

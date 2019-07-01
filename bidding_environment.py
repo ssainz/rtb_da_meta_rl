@@ -4,7 +4,8 @@ import config
 
 class BidEnv():
 
-    def __init__(self, info, auction_in):
+    def __init__(self, info, auction_in_file):
+        auction_in = open(auction_in_file, 'r')
 
         self._step = 0
 
@@ -18,6 +19,7 @@ class BidEnv():
             click = int(line[0])
             price = int(line[1])
             theta = float(line[2])
+
             self.episodes.append((click, price, theta))
 
 
@@ -25,6 +27,7 @@ class BidEnv():
         self._step = 0
 
         (self.click, self.price, self.theta) = self.episodes[self._step]
+
         self._step += 1
 
         return self.theta, self.price
@@ -43,6 +46,5 @@ class BidEnv():
 
         done = self._step >= len(self.episodes)
 
-        return done, self.theta, self.price, ret_impression, ret_click
         return done, self.theta, self.price, ret_impression, ret_click
 
