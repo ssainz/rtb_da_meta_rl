@@ -6,6 +6,7 @@ import os
 import pickle
 import numpy as np
 
+tf.compat.v1.disable_v2_behavior()
 
 class NN_Approximator:
     def __init__(self, net_type, net_argv, init_path, init_argv, dim_argv, batch_size, opt_argv):
@@ -46,9 +47,12 @@ class NN_Approximator:
 
                 self.opt_value = build_optimizer(opt_argv, self.loss_value)
 
-                self.init = tf.initialize_all_variables()
+                #self.init = tf.initialize_all_variables()
+                self.init = tf.global_variables_initializer()
+        #self.log = "net_type={}\tnet_argv={}\tinit_path={}\tinit_argv={}\tdim_argv={}\tbatch_size={}\topt_argv={}" \
+        #    .format(net_type, net_argv, init_path, init_argv, dim_argv, batch_size, opt_argv)
         self.log = "net_type={}\tnet_argv={}\tinit_path={}\tinit_argv={}\tdim_argv={}\tbatch_size={}\topt_argv={}" \
-            .format(net_type, net_argv, init_path, init_argv, dim_argv, batch_size, opt_argv)
+                .format(net_type, net_argv, init_path, init_argv, dim_argv, batch_size, opt_argv)
 
     @staticmethod
     def forward(net_type, depth, act_func, x_vec, _vars):

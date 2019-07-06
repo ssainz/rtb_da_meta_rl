@@ -163,6 +163,7 @@ class bidding_agent_rtb_rl_dp_tabular(bidding_agent):
                     a = delta
                 else:
                     break
+
         return a
 
     def run(self, bid_log_path, N, c0, max_bid, input_type="file reader", delimiter=" ", save_log=False):

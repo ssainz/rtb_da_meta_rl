@@ -18,7 +18,7 @@ import tensorflow as tf
 import numpy as np
 from sklearn.metrics import mean_squared_error
 
-
+tf.compat.v1.disable_v2_behavior()
 
 
 class bidding_agent_rtb_rl_fa(bidding_agent):
@@ -34,8 +34,8 @@ class bidding_agent_rtb_rl_fa(bidding_agent):
 
         self.D_info = []
         self.D_point = []
-        self.N_bound = 0
-        self.B_bound = 0
+        self.N_bound = 50
+        self.B_bound = 800
 
         self.nn_approx = None
         self.sess = None
@@ -49,7 +49,7 @@ class bidding_agent_rtb_rl_fa(bidding_agent):
 
 
 
-    def approximate(self, model, src, camp, N, D_function_path,  large_storage_folder , NN_model_path):
+    def approximate(self, model, src, camp, N, D_function_path,  large_storage_folder , NN_model_path, NN_model_txt_path):
 
         seeds = [0x0123, 0x4567, 0x3210, 0x7654, 0x89AB, 0xCDEF, 0xBA98, 0xFEDC,
                  0x0123, 0x4567, 0x3210, 0x7654, 0x89AB, 0xCDEF, 0xBA98, 0xFEDC]
@@ -73,7 +73,8 @@ class bidding_agent_rtb_rl_fa(bidding_agent):
 
             b_bound = 800
             n_bound = 50
-            max_train_round = 100
+            #max_train_round = 100
+            max_train_round = 20
             final_model_path = NN_model_path
 
             n_sample_size = 50
@@ -139,7 +140,8 @@ class bidding_agent_rtb_rl_fa(bidding_agent):
                     write_log(log_path, nn_approx.log)
 
                 with tf.Session(graph=nn_approx.graph) as sess:
-                    tf.initialize_all_variables().run()
+                    #tf.initialize_all_variables().run()
+                    tf.global_variables_initializer().run()
                     print("model initialized")
 
                     _iter = 0
@@ -190,6 +192,7 @@ class bidding_agent_rtb_rl_fa(bidding_agent):
                         if save_model:
                             write_log(log_path, eval_log)
                             nn_approx.dump(model_path + "{}_{}.pickle".format(tag, _iter), net_type, net_argv)
+                            nn_approx.pickle2txt(model_path + "{}_{}.pickle".format(tag, _iter), model_path + "{}_{}.txt".format(tag, _iter))
                             n_perf = (buf_rmse + eval_rmse) / avg_theta
                             if n_perf < perf:
                                 perf = n_perf
@@ -197,6 +200,7 @@ class bidding_agent_rtb_rl_fa(bidding_agent):
                         start_time = time.time()
                         if _iter >= max_train_round:
                             nn_approx.dump(final_model_path, net_type, net_argv)
+                            nn_approx.pickle2txt(final_model_path, NN_model_txt_path)
                             break
 
             elif mode == "eval":
@@ -294,19 +298,30 @@ class bidding_agent_rtb_rl_fa(bidding_agent):
 
 
     def bid(self, n, b, theta, max_bid):
+        #print("self.N_bound = {}, n = {} , b = {} , max_bid = {}".format(self.N_bound, n, b, max_bid))
         if n > self.N_bound:
+            #print("bid method : n > self.N_bound")
             return self.bid(self.N_bound, int(b / n * self.N_bound), theta, max_bid)
         if b > self.B_bound:
+            #print("bid method : b > self.B_bound")
             return self.bid(int(n / b * self.B_bound), self.B_bound, theta, max_bid)
         a = 0
         value = self.v1 * theta
+        #print(" range = {}".format(range(1, min(b, max_bid) + 1)))
+
+        if n == 0:
+            return 0
+
         for delta in range(1, min(b, max_bid) + 1):
+            #print("delta iteration, delta = {}".format(delta))
+
             dnb = self.get_Dnb(n - 1, b - delta)
             value -= self.gamma * dnb + self.v0
             if value >= 0:
                 a = delta
             else:
                 break
+        #print("bid method : len(self.D) > 0; a = {}".format(a))
         return a
 
 
