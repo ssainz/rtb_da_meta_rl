@@ -16,8 +16,8 @@ c0 = 1 / 8
 gamma = 1
 
 #agents_to_execute = ['lin', 'rlb_dp_tabular']
-#agents_to_execute = ['lin','rlb_rl_dp_tabular', "rlb_rl_fa"]
-agents_to_execute = ["rlb_rl_fa"]
+agents_to_execute = ['lin','rlb_rl_dp_tabular', "rlb_rl_fa"]
+#agents_to_execute = ["rlb_rl_fa"]
 
 src = "ipinyou"
 
@@ -116,8 +116,8 @@ for camp in camps:
 
         overwrite = False
         # First train DP
-        #large_storage_media = "/media/onetbssd/rlb/"
-        large_storage_media = "."
+        large_storage_media = "/media/onetbssd/rlb/"
+        #large_storage_media = "."
         large_storage_folder = large_storage_media + src + "/" + camp + "/bid-model/"
 
         if not os.path.exists(large_storage_folder):
@@ -179,7 +179,7 @@ for camp in camps:
 
         log_in.write(log + "\n")
 
-        exit()
+        #exit()
 
     print( " Finish processing camp = {}".format(camp))
 

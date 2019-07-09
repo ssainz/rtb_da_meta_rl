@@ -103,7 +103,7 @@ class NN_Approximator:
             var_map["act_func"] = act_func
         var_map["net_type"] = net_type
         pickle.dump(var_map, open(model_path, 'wb'))
-        print("NN_Approximator model dumped at {0}".format(model_path))
+        #print("NN_Approximator model dumped at {0}".format(model_path))
 
     @staticmethod
     def pickle2txt(pickle_path, txt_path):
