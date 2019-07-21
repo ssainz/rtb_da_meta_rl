@@ -8,15 +8,19 @@ from bidding_environment import BidEnv
 from bidding_agent_linear import bidding_agent_linear
 from bidding_agent_rtb_rl_dp_tabular import bidding_agent_rtb_rl_dp_tabular
 from bidding_agent_rtb_rl_fa import bidding_agent_rtb_rl_fa
+import bidding_agent_meta
+from utils import getTime
 
 obj_type = "clk"
 clk_vp = 1
-N = 200
+#N = 10000
+N = 1000
 c0 = 1 / 8
 gamma = 1
 
 #agents_to_execute = ['lin', 'rlb_dp_tabular']
-agents_to_execute = ['lin','rlb_rl_dp_tabular', "rlb_rl_fa"]
+#agents_to_execute = ['lin','rlb_rl_dp_tabular', "rlb_rl_fa", 'meta']
+agents_to_execute = ['meta']
 #agents_to_execute = ["rlb_rl_fa"]
 
 src = "ipinyou"
@@ -111,7 +115,7 @@ for camp in camps:
         print(log)
         log_in.write(log + "\n")
 
-    # RLB-FA: real time bidding tabular function approximation.
+    # RLB-FA: real time D(t,b) function approximation.
     if 'rlb_rl_fa' in agents_to_execute:
 
         overwrite = False
@@ -131,7 +135,7 @@ for camp in camps:
             .format(src, camp, "rlb_rl_fa", N, c0)
         bid_log_path = config.projectPath + "bid-log/{}.txt".format(setting)
 
-        # Approximating D function
+        # Approximating D(t,b) function
         m_pdf = calc_m_pdf(camp_info["price_counter_train"])
         D_function_path = large_storage_folder + "rlb_dnb_gamma={}_N={}_{}.txt".format(gamma, N, obj_type)
         if (not os.path.isfile(D_function_path)) or overwrite:
@@ -180,43 +184,41 @@ for camp in camps:
         log_in.write(log + "\n")
 
         #exit()
+    if 'meta' in agents_to_execute:
+
+        # Set the camp to train on:
+        config.ipinyou_camps_target = camp
+
+        # Runs meta RL and stores final model.
+        agent = bidding_agent_meta()
+        large_storage_folder = large_storage_media + src + "/" + camp + "/bid-model/"
+        print(getTime() + ":BEGIN meta training")
+        NN_model_path = agent.run_meta_training(large_storage_folder)
+        print(getTime() + ":END meta training")
+
+        # Read final model and evaluate.
+        agent.load_model(NN_model_path)
+
+        # prepare to run traditional bidding on the meta-trained model.
+        setting = "{}, camp={}, algo={}, N={}, c0={}" \
+            .format(src, camp, "meta_bid", N, c0)
+        bid_log_path = config.projectPath + "bid-log/{}.txt".format(setting)
+        env = BidEnv(camp_info, aution_in_file)
+
+        (auction, imp, clk, cost) = agent.run(env, bid_log_path, N, c0,
+                                              max_market_price, save_log=True)
+
+        win_rate = imp / auction * 100
+        cpm = (cost / 1000) / (imp + 1.0e-14) * 1000
+        ecpc = (cost / 1000) / (clk + 1.0e-14)
+        obj = opt_obj.get_obj(imp, clk, cost)
+        log = "{:<80}\t{:>10}\t{:>8}\t{:>10}\t{:>8}\t{:>8}\t{:>8.2f}%\t{:>8.2f}\t{:>8.2f}" \
+            .format(setting, obj, auction, imp, clk, cost, win_rate, cpm, ecpc)
+        print(log)
 
     print( " Finish processing camp = {}".format(camp))
 
 print("Finish processing all camps")
-
-    # agent = bidding_agent_rtb_rl(camp_info, opt_obj, gamma)
-    # setting = "{}, camp={}, algo={}, N={}, c0={}, obj={}, clk_v={}" \
-    #     .format(src, camp, "rlb_dp_fa", N, c0, obj_type, opt_obj.clk_v)
-    # bid_log_path = config.projectPath + "bid-log/{}.txt".format(setting)
-    #
-    # save_point_path = data_path + camp + "/bid-model/rlb_dnb_save_points_{}.txt".format(obj_type)
-    # agent.load_save_points(save_point_path)
-    #
-    # # model_path = data_path + camp + "/bid-model/fa_dnb_{}.pickle".format(obj_type)
-    # # rlb_dp_fa.load_nn_approximator("pickle", model_path)
-    #
-    # model_path = data_path + camp + "/bid-model/fa_dnb_{}.txt".format(obj_type)
-    # agent.load_nn_approximator("txt", model_path)
-    #
-    # bid_factor_file = data_path + camp + "/bid-model/{}_{}_{}_{}_{}.pickle".format("rlb_bid_factor", N, c0, obj_type,
-    #                                                                                opt_obj.clk_v)
-    # if os.path.isfile(bid_factor_file):
-    #     bf = pickle.load(open(bid_factor_file, "rb"))["bid-factor"]
-    # else:
-    #     bf = 1
-    #
-    # (auction, imp, clk, cost) = agent.run(auction_in, bid_log_path, N, c0,
-    #                                           max_market_price, delimiter=" ", save_log=True, bid_factor=bf)
-    #
-    # win_rate = imp / auction * 100
-    # cpm = (cost / 1000) / imp * 1000
-    # ecpc = (cost / 1000) / clk
-    # obj = opt_obj.get_obj(imp, clk, cost)
-    # log = "{:<80}\t{:>10}\t{:>8}\t{:>10}\t{:>8}\t{:>8}\t{:>8.2f}%\t{:>8.2f}\t{:>8.2f}" \
-    #     .format(setting, obj, auction, imp, clk, cost, win_rate, cpm, ecpc)
-    # print(log)
-    # log_in.write(log + "\n")
 
 
 

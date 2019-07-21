@@ -19,7 +19,6 @@ class BidEnv():
             click = int(line[0])
             price = int(line[1])
             theta = float(line[2])
-
             self.episodes.append((click, price, theta))
 
 

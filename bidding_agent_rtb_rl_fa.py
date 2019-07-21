@@ -73,8 +73,8 @@ class bidding_agent_rtb_rl_fa(bidding_agent):
 
             b_bound = 800
             n_bound = 50
-            #max_train_round = 100
-            max_train_round = 20
+            max_train_round = 1000
+            #max_train_round = 20
             final_model_path = NN_model_path
 
             n_sample_size = 50
