@@ -59,18 +59,20 @@ class BiddingMDPEnv(gym.Env):
 
     def reset_task(self, task):
         self._task = task
-        self._camp = task.camp
-        self._file_location = task.file_location
+        self._camp = task['camp']
+        self._file_location = task['file_location']
+        self._file_contents = open(self._file_location, 'r')
 
         # Load the campaing.
         self.episodes = []
 
-        for line in self._file_location:
+        for line in self._file_contents:
             line = line[:len(line) - 1].split(config.delimiter)
             click = int(line[0])
             price = int(line[1])
             theta = float(line[2])
             self.episodes.append((click, price, theta))
+        self._file_contents.close()
         self._step = 0
 
     def reset(self):

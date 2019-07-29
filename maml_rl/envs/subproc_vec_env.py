@@ -32,7 +32,7 @@ class EnvWorker(mp.Process):
             except queue.Empty:
                 self.done = True
         observation = (np.zeros(self.env.observation_space.shape,
-            dtype=np.float32) if self.done else self.env.reset())
+            dtype=np.int32) if self.done else self.env.reset())
         return observation
 
     def run(self):

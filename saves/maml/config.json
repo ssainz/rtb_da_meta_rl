@@ -1,0 +1,20 @@
+{
+  "ls_max_steps": 15,
+  "output_folder": "maml",
+  "device": "cuda",
+  "num_batches": 100000,
+  "hidden_size": 100,
+  "tau": 1.0,
+  "fast_batch_size": 20,
+  "env_name": "BiddingMDP-v0",
+  "num_layers": 2,
+  "max_kl": 0.01,
+  "cg_iters": 10,
+  "fast_lr": 0.5,
+  "ls_backtrack_ratio": 0.8,
+  "cg_damping": 1e-05,
+  "gamma": 0.95,
+  "first_order": false,
+  "meta_batch_size": 500,
+  "num_workers": 6
+}

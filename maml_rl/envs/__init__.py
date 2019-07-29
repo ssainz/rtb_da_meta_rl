@@ -20,6 +20,17 @@ register(
     max_episode_steps=10
 )
 
+# BiddingMDP
+# ----------------------------------------
+
+register(
+    'BiddingMDP-v0',
+    entry_point='maml_rl.envs.bidding:BiddingMDPEnv',
+    kwargs={},
+    max_episode_steps=1000
+)
+
+
 # Mujoco
 # ----------------------------------------
 

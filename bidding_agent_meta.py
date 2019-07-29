@@ -1,4 +1,4 @@
-import bidding_agent
+from bidding_agent import bidding_agent
 import os
 import json
 import argparse
@@ -11,8 +11,11 @@ from maml_rl.policies.categorical_mlp import CategoricalMLPPolicy
 from maml_rl.policies.normal_mlp import NormalMLPPolicy
 from maml_rl.baseline import LinearFeatureBaseline
 from maml_rl.sampler import BatchSampler
+import multiprocessing as mp
 
 from tensorboardX import SummaryWriter
+
+cpu_device = torch.device("cpu")
 
 def total_rewards(episodes_rewards, aggregation=torch.mean):
     rewards = torch.mean(torch.stack([aggregation(torch.sum(rewards, dim=0))
@@ -21,8 +24,14 @@ def total_rewards(episodes_rewards, aggregation=torch.mean):
 
 class bidding_agent_meta(bidding_agent):
 
-    def __init__(self):
+    def __init__(self, camp_info):
         print("bidding_agent_meta created!")
+        self.cpm = camp_info["cost_train"] / camp_info["imp_train"]
+        self.theta_avg = camp_info["clk_train"] / camp_info["imp_train"]
+        self.b0 = 0
+        self.step = 6
+        self.valid_rate = 1
+        self.min_valid = 300000
 
     def run_meta_training(self, final_model_folder):
 
@@ -31,7 +40,7 @@ class bidding_agent_meta(bidding_agent):
 
         # General
         parser.add_argument('--env-name', type=str,
-                            help='name of the environment', default='bidding')
+                            help='name of the environment', default='BiddingMDP-v0')
         parser.add_argument('--gamma', type=float, default=0.95,
                             help='value of the discount factor gamma')
         parser.add_argument('--tau', type=float, default=1.0,
@@ -52,9 +61,9 @@ class bidding_agent_meta(bidding_agent):
                             help='learning rate for the 1-step gradient update of MAML')
 
         # Optimization
-        parser.add_argument('--num-batches', type=int, default=10,
+        parser.add_argument('--num-batches', type=int, default=100000,
                             help='number of batches')
-        parser.add_argument('--meta-batch-size', type=int, default=10,
+        parser.add_argument('--meta-batch-size', type=int, default=500,
                             help='number of tasks per batch')
         parser.add_argument('--max-kl', type=float, default=1e-2,
                             help='maximum value for the KL constraint in TRPO')
@@ -70,14 +79,14 @@ class bidding_agent_meta(bidding_agent):
         # Miscellaneous
         parser.add_argument('--output-folder', type=str, default='maml',
                             help='name of the output folder')
-        parser.add_argument('--num-workers', type=int, default=5,
+        parser.add_argument('--num-workers', type=int, default=mp.cpu_count() - 2,
                             help='number of workers for trajectories sampling')
-        parser.add_argument('--device', type=str, default='cpu',
+        parser.add_argument('--device', type=str, default='cuda',
                             help='set the device (cpu or cuda)')
 
         args = parser.parse_args()
 
-        continuous_actions = (args.env_name in ['bidding', 'AntVel-v1', 'AntDir-v1',
+        continuous_actions = (args.env_name in ['BiddingMDP-v0', 'AntVel-v1', 'AntDir-v1',
                                                 'AntPos-v0', 'HalfCheetahVel-v1', 'HalfCheetahDir-v1',
                                                 '2DNavigation-v0'])
 
@@ -165,7 +174,9 @@ class bidding_agent_meta(bidding_agent):
             observation[0] = theta
             observation[1] = price
 
-            observations_tensor = torch.from_numpy(observation)
+
+            observations_tensor = torch.from_numpy(observation).to(torch.device("cuda"))
+            #print("observation_tensor device is "+ str(observations_tensor.device))
             with torch.no_grad():
                 actions_tensor = self.policy(observations_tensor).sample()
                 a = actions_tensor.cpu().numpy()

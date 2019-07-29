@@ -8,7 +8,7 @@ from bidding_environment import BidEnv
 from bidding_agent_linear import bidding_agent_linear
 from bidding_agent_rtb_rl_dp_tabular import bidding_agent_rtb_rl_dp_tabular
 from bidding_agent_rtb_rl_fa import bidding_agent_rtb_rl_fa
-import bidding_agent_meta
+from bidding_agent_meta import bidding_agent_meta
 from utils import getTime
 
 obj_type = "clk"
@@ -35,7 +35,7 @@ print(log)
 log_in.write(log + "\n")
 
 if src == "ipinyou":
-    camps = config.ipinyou_camps
+    camps = config.ipinyou_camps_to_test
     data_path = config.ipinyouPath
     max_market_price = config.ipinyou_max_market_price
 
@@ -46,6 +46,8 @@ for camp in camps:
     aution_in_file = data_path + camp + "/test.theta.txt"
     opt_obj = Opt_Obj(obj_type, int(clk_vp * camp_info["cost_train"] / camp_info["clk_train"]))
     B = int(camp_info["cost_train"] / camp_info["imp_train"] * c0 * N)
+
+    large_storage_media = "/media/onetbssd/rlb/"
 
     # Create log file folder location.
     if not os.path.exists(config.projectPath + "bid-log"):
@@ -120,7 +122,7 @@ for camp in camps:
 
         overwrite = False
         # First train DP
-        large_storage_media = "/media/onetbssd/rlb/"
+
         #large_storage_media = "."
         large_storage_folder = large_storage_media + src + "/" + camp + "/bid-model/"
 
@@ -190,7 +192,7 @@ for camp in camps:
         config.ipinyou_camps_target = camp
 
         # Runs meta RL and stores final model.
-        agent = bidding_agent_meta()
+        agent = bidding_agent_meta(camp_info)
         large_storage_folder = large_storage_media + src + "/" + camp + "/bid-model/"
         print(getTime() + ":BEGIN meta training")
         NN_model_path = agent.run_meta_training(large_storage_folder)
