@@ -164,6 +164,7 @@ class MetaLearner(object):
         """Meta-optimization step (ie. update of the initial parameters), based
         on Trust Region Policy Optimization (TRPO, [4]).
         """
+        torch.cuda.empty_cache()
         old_loss, _, old_pis = self.surrogate_loss(episodes)
         grads = torch.autograd.grad(old_loss, self.policy.parameters())
         grads = parameters_to_vector(grads)
@@ -186,6 +187,8 @@ class MetaLearner(object):
         # Line search
         step_size = 1.0
         for _ in range(ls_max_steps):
+            print("metalearner.py - ls_max_steps")
+            print(_)
             vector_to_parameters(old_params - step_size * step,
                                  self.policy.parameters())
             loss, kl, _ = self.surrogate_loss(episodes, old_pis=old_pis)

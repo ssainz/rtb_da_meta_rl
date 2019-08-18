@@ -3,6 +3,7 @@ import sys
 import os
 import numpy as np
 import pickle
+import datetime as dt
 from utils import Opt_Obj
 from utils import calc_m_pdf
 from bidding_environment import BidEnv
@@ -11,6 +12,12 @@ from bidding_agent_rtb_rl_dp_tabular import bidding_agent_rtb_rl_dp_tabular
 from bidding_agent_rtb_rl_fa import bidding_agent_rtb_rl_fa
 from bidding_agent_meta import bidding_agent_meta
 from utils import getTime
+from maml_rl.sampler import BatchSampler
+from maml_rl.policies.continuous_mlp import ContinuousMLPPolicy
+from bid_train_nn_with_d_function import approximate
+from bid_train_nn_with_d_function import create_D_function
+import torch
+import numpy as np
 
 obj_type = "clk"
 clk_vp = 1
@@ -21,7 +28,9 @@ gamma = 1
 
 #agents_to_execute = ['lin', 'rlb_dp_tabular']
 #agents_to_execute = ['lin','rlb_rl_dp_tabular', "rlb_rl_fa", 'meta']
-agents_to_execute = ['meta']
+#agents_to_execute = ['meta']
+#agents_to_execute = ['lin','meta_imitation']
+agents_to_execute = ['meta_imitation']
 #agents_to_execute = ['lin', 'rlb_rl_dp_tabular','meta']
 #agents_to_execute = ["rlb_rl_fa"]
 
@@ -290,6 +299,95 @@ for camp in camps:
         print(getTime() + ":BEGIN meta training")
         NN_model_path = agent.run_meta_training(large_storage_folder)
         print(getTime() + ":END meta training")
+
+        # Read final model and evaluate.
+        agent.load_model(NN_model_path)
+
+        # prepare to run traditional bidding on the meta-trained model.
+        setting = "{}, camp={}, algo={}, N={}, c0={}" \
+            .format(src, camp, "meta_bid", N, c0)
+        bid_log_path = config.projectPath + "bid-log/{}.txt".format(setting)
+        env = BidEnv(camp_info, aution_in_file)
+
+        (auction, imp, clk, cost) = agent.run(env, bid_log_path, N, c0,
+                                              max_market_price, save_log=True)
+
+        win_rate = imp / auction * 100
+        cpm = (cost / 1000) / (imp + 1.0e-14) * 1000
+        ecpc = (cost / 1000) / (clk + 1.0e-14)
+        obj = opt_obj.get_obj(imp, clk, cost)
+        log = "{:<80}\t{:>10}\t{:>8}\t{:>10}\t{:>8}\t{:>8}\t{:>8.2f}%\t{:>8.2f}\t{:>8.2f}" \
+            .format(setting, obj, auction, imp, clk, cost, win_rate, cpm, ecpc)
+        print(log)
+
+    if 'meta_imitation' in agents_to_execute:
+        train_camps = []
+        overwrite = False
+
+        for train_camp in config.ipinyou_camps:
+            if train_camp != camp:
+                train_camps.append(train_camp)
+
+
+
+        sampler = BatchSampler('BiddingMDP-v0', batch_size=50,
+                               num_workers=2)
+
+        policy = ContinuousMLPPolicy(
+            int(np.prod(sampler.envs.observation_space.shape)),
+            int(np.prod(sampler.envs.action_space.shape)),
+            hidden_sizes=(400,) * 3)
+
+        policy.cuda()
+
+        print(str(dt.datetime.now()) + " meta imitiation init " + " - policy created ")
+
+        # Create D function
+        camp = train_camps[0]
+        #if (not os.path.exists(D_function_path)) or overwrite:
+        agent, src, N, D_function_path, large_storage_folder, NN_model_path, NN_model_txt_path, opt_obj, camp_info = create_D_function(camp)
+        print("Model path " + NN_model_path)
+
+        print(str(dt.datetime.now()) + " meta imitiation init " + " - D function created ")
+
+
+
+        # Approximate d function:
+        model = "dnb"
+        learning_rate = 1e-4
+        stop_after_first_it = False
+
+        if (not os.path.exists(NN_model_path)) or overwrite:
+            print("NN_model_path does not exist")
+            print(NN_model_path)
+            approximate(stop_after_first_it, policy, learning_rate, model, src, camp, N, D_function_path,
+                        large_storage_folder, NN_model_path, NN_model_txt_path, opt_obj, camp_info)
+
+        print(str(dt.datetime.now()) + " meta imitiation init " + " - finish training model ")
+
+        # Load the nn weights:
+        imitation_policy = ContinuousMLPPolicy(
+            int(np.prod(sampler.envs.observation_space.shape)),
+            int(np.prod(sampler.envs.action_space.shape)),
+            hidden_sizes=(400,) * 3)
+
+        imitation_policy.load_state_dict(torch.load(NN_model_path))
+        imitation_policy.cuda()
+
+        print(str(dt.datetime.now()) + " meta imitiation init " + " - finish saving/loading model ")
+
+        # Set the camp to train on:
+        config.ipinyou_camps_target = camp
+
+        # Runs meta RL and stores final model.
+        agent = bidding_agent_meta(camp_info)
+        torch.cuda.empty_cache()
+        large_storage_folder = large_storage_media + src + "/" + camp + "/bid-model/"
+        print(getTime() + ":BEGIN meta training")
+        NN_model_path = agent.run_meta_training(large_storage_folder, imitation_policy)
+        print(getTime() + ":END meta training")
+
+
 
         # Read final model and evaluate.
         agent.load_model(NN_model_path)

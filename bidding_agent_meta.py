@@ -33,7 +33,7 @@ class bidding_agent_meta(bidding_agent):
         self.valid_rate = 1
         self.min_valid = 300000
 
-    def run_meta_training(self, final_model_folder):
+    def run_meta_training(self, final_model_folder, policy=None):
 
         parser = argparse.ArgumentParser(description='Reinforcement learning with '
                                                      'Model-Agnostic Meta-Learning (MAML)')
@@ -49,7 +49,7 @@ class bidding_agent_meta(bidding_agent):
                             help='use the first-order approximation of MAML')
 
         # Policy network (relu activation function)
-        parser.add_argument('--hidden-size', type=int, default=100,
+        parser.add_argument('--hidden-size', type=int, default=200,
                             help='number of hidden units per layer')
         parser.add_argument('--num-layers', type=int, default=2,
                             help='number of hidden layers')
@@ -61,9 +61,11 @@ class bidding_agent_meta(bidding_agent):
                             help='learning rate for the 1-step gradient update of MAML')
 
         # Optimization
-        parser.add_argument('--num-batches', type=int, default=100000,
+        parser.add_argument('--num-batches', type=int, default=32,
                             help='number of batches')
-        parser.add_argument('--meta-batch-size', type=int, default=500,
+        parser.add_argument('--meta-batch-size', type=int, default=50,
+        #parser.add_argument('--meta-batch-size', type=int, default=50,
+        #parser.add_argument('--meta-batch-size', type=int, default=2,
                             help='number of tasks per batch')
         parser.add_argument('--max-kl', type=float, default=1e-2,
                             help='maximum value for the KL constraint in TRPO')
@@ -71,6 +73,8 @@ class bidding_agent_meta(bidding_agent):
                             help='number of iterations of conjugate gradient')
         parser.add_argument('--cg-damping', type=float, default=1e-5,
                             help='damping in conjugate gradient')
+        #parser.add_argument('--ls-max-steps', type=int, default=2,
+        #parser.add_argument('--ls-max-steps', type=int, default=15,
         parser.add_argument('--ls-max-steps', type=int, default=15,
                             help='maximum number of iterations for line search')
         parser.add_argument('--ls-backtrack-ratio', type=float, default=0.8,
@@ -79,7 +83,8 @@ class bidding_agent_meta(bidding_agent):
         # Miscellaneous
         parser.add_argument('--output-folder', type=str, default='maml',
                             help='name of the output folder')
-        parser.add_argument('--num-workers', type=int, default=mp.cpu_count() - 2,
+        #parser.add_argument('--num-workers', type=int, default=mp.cpu_count() - 2,
+        parser.add_argument('--num-workers', type=int, default=1,
                             help='number of workers for trajectories sampling')
         parser.add_argument('--device', type=str, default='cuda',
                             help='set the device (cpu or cuda)')
@@ -96,8 +101,9 @@ class bidding_agent_meta(bidding_agent):
         if not os.path.exists('./saves'):
             os.makedirs('./saves')
         # Device
-        args.device = torch.device(args.device
-                                   if torch.cuda.is_available() else 'cpu')
+       # args.device = torch.device(args.device
+       #                            if torch.cuda.is_available() else 'cpu')
+        args.device = torch.device("cpu")
 
         writer = SummaryWriter('./logs/{0}'.format(args.output_folder))
         save_folder = './saves/{0}'.format(args.output_folder)
@@ -110,19 +116,25 @@ class bidding_agent_meta(bidding_agent):
 
         sampler = BatchSampler(args.env_name, batch_size=args.fast_batch_size,
                                num_workers=args.num_workers)
-        if continuous_actions:
+        if policy is None and continuous_actions:
+            print("CREATING POLICY WHEN IT SHOULD NOT")
+            exit()
             policy = NormalMLPPolicy(
                 int(np.prod(sampler.envs.observation_space.shape)),
                 int(np.prod(sampler.envs.action_space.shape)),
                 hidden_sizes=(args.hidden_size,) * args.num_layers)
             self.policy = policy
-        else:
+        elif policy is None:
+            print("CREATING POLICY WHEN IT SHOULD NOT")
+            exit()
             policy = CategoricalMLPPolicy(
                 int(np.prod(sampler.envs.observation_space.shape)),
                 sampler.envs.action_space.n,
                 hidden_sizes=(args.hidden_size,) * args.num_layers)
         baseline = LinearFeatureBaseline(
             int(np.prod(sampler.envs.observation_space.shape)))
+
+        self.policy = policy
 
         metalearner = MetaLearner(sampler, policy, baseline, gamma=args.gamma,
                                   fast_lr=args.fast_lr, tau=args.tau, device=args.device)
@@ -139,6 +151,8 @@ class bidding_agent_meta(bidding_agent):
                               total_rewards([ep.rewards for ep, _ in episodes]), batch)
             writer.add_scalar('total_rewards/after_update',
                               total_rewards([ep.rewards for _, ep in episodes]), batch)
+
+            torch.cuda.empty_cache()
 
             # Save policy network
             final_model_path = final_model_folder + "meta_rl_gamma_policy_{}.pt".format(batch)
@@ -175,7 +189,8 @@ class bidding_agent_meta(bidding_agent):
             observation[1] = price
 
 
-            observations_tensor = torch.from_numpy(observation).to(torch.device("cuda"))
+            #observations_tensor = torch.from_numpy(observation).to(torch.device("cuda"))
+            observations_tensor = torch.from_numpy(observation).to(torch.device("cpu"))
             #print("observation_tensor device is "+ str(observations_tensor.device))
             with torch.no_grad():
                 actions_tensor = self.policy(observations_tensor).sample()

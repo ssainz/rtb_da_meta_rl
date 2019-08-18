@@ -2,6 +2,7 @@ import config
 import sys
 import os
 import pickle
+import datetime as dt
 from utils import Opt_Obj
 from utils import calc_m_pdf
 from bidding_environment import BidEnv
@@ -10,6 +11,11 @@ from bidding_agent_rtb_rl_dp_tabular import bidding_agent_rtb_rl_dp_tabular
 from bidding_agent_rtb_rl_fa import bidding_agent_rtb_rl_fa
 from bidding_agent_meta import bidding_agent_meta
 from utils import getTime
+from maml_rl.sampler import BatchSampler
+from maml_rl.policies.continuous_mlp import ContinuousMLPPolicy
+from bid_train_nn_with_d_function import approximate
+import torch
+import numpy as np
 
 obj_type = "clk"
 clk_vp = 1
@@ -217,6 +223,44 @@ for camp in camps:
         log = "{:<80}\t{:>10}\t{:>8}\t{:>10}\t{:>8}\t{:>8}\t{:>8.2f}%\t{:>8.2f}\t{:>8.2f}" \
             .format(setting, obj, auction, imp, clk, cost, win_rate, cpm, ecpc)
         print(log)
+
+    if 'meta_imitiation_init' in agents_to_execute:
+        sampler = BatchSampler('BiddingMDP-v0', batch_size=50,
+                               num_workers=2)
+
+        policy = ContinuousMLPPolicy(
+            int(np.prod(sampler.envs.observation_space.shape)),
+            int(np.prod(sampler.envs.action_space.shape)),
+            hidden_sizes=(1000,) * 3)
+
+        policy.cuda()
+
+        print(str(dt.datetime.now()) + " - policy created")
+
+        # Create D function
+        camp = "2997"
+        agent, src, N, D_function_path, large_storage_folder, NN_model_path, NN_model_txt_path, opt_obj, camp_info = create_D_function(
+            camp)
+
+        print(str(dt.datetime.now()) + " - D function created")
+
+        # Approximate d function:
+        model = "dnb"
+        learning_rate = 1e-4
+        stop_after_first_it = False
+        approximate(stop_after_first_it, policy, learning_rate, model, src, camp, N, D_function_path,
+                    large_storage_folder, NN_model_path, NN_model_txt_path, opt_obj, camp_info)
+
+        policy2 = ContinuousMLPPolicy(
+            int(np.prod(sampler.envs.observation_space.shape)),
+            int(np.prod(sampler.envs.action_space.shape)),
+            hidden_sizes=(1000,) * 3)
+
+        policy2.load_state_dict(torch.load(NN_model_path))
+        policy2.cuda()
+
+
+
 
     print( " Finish processing camp = {}".format(camp))
 

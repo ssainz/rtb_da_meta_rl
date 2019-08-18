@@ -122,6 +122,8 @@ def evaluate_rmse(train_dir, n_list, b_sample_size, batch_size, b_bound, dim, mo
     return np.sqrt(square_error / cnt)
 
 
+
+
 def activate(act_func, x):
     if act_func == 'tanh':
         return tf.tanh(x)
