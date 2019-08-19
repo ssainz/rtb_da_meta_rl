@@ -30,7 +30,7 @@ gamma = 1
 #agents_to_execute = ['lin','rlb_rl_dp_tabular', "rlb_rl_fa", 'meta']
 #agents_to_execute = ['meta']
 #agents_to_execute = ['lin','meta_imitation']
-agents_to_execute = ['meta_imitation']
+agents_to_execute = ['meta_imitation', 'lin', 'rlb_rl_dp_tabular']
 #agents_to_execute = ['lin', 'rlb_rl_dp_tabular','meta']
 #agents_to_execute = ["rlb_rl_fa"]
 
@@ -323,6 +323,10 @@ for camp in camps:
     if 'meta_imitation' in agents_to_execute:
         train_camps = []
         overwrite = False
+        actual_camp = camp
+        actual_camp_info = camp_info
+        actual_aution_in_file = data_path + camp + "/test.theta.txt"
+        actual_N = N
 
         for train_camp in config.ipinyou_camps:
             if train_camp != camp:
@@ -344,8 +348,11 @@ for camp in camps:
 
         # Create D function
         camp = train_camps[0]
+        camp_info = config.get_camp_info(camp, src)
+        aution_in_file = data_path + camp + "/test.theta.txt"
+
         #if (not os.path.exists(D_function_path)) or overwrite:
-        agent, src, N, D_function_path, large_storage_folder, NN_model_path, NN_model_txt_path, opt_obj, camp_info = create_D_function(camp)
+        agent, src, N, D_function_path, large_storage_folder, NN_model_path, NN_model_txt_path, opt_obj, camp_info, X, Y = create_D_function(camp, max_market_price)
         print("Model path " + NN_model_path)
 
         print(str(dt.datetime.now()) + " meta imitiation init " + " - D function created ")
@@ -357,11 +364,15 @@ for camp in camps:
         learning_rate = 1e-4
         stop_after_first_it = False
 
+        # print("(not os.path.exists(NN_model_path)) or overwrite")
+        # print((not os.path.exists(NN_model_path)) or overwrite)
+        # exit()
+
         if (not os.path.exists(NN_model_path)) or overwrite:
             print("NN_model_path does not exist")
             print(NN_model_path)
-            approximate(stop_after_first_it, policy, learning_rate, model, src, camp, N, D_function_path,
-                        large_storage_folder, NN_model_path, NN_model_txt_path, opt_obj, camp_info)
+            approximate(stop_after_first_it, policy, learning_rate, model, src, camp, N,
+                        large_storage_folder, NN_model_path, NN_model_txt_path, opt_obj, camp_info, X, Y)
 
         print(str(dt.datetime.now()) + " meta imitiation init " + " - finish training model ")
 
@@ -384,21 +395,22 @@ for camp in camps:
         torch.cuda.empty_cache()
         large_storage_folder = large_storage_media + src + "/" + camp + "/bid-model/"
         print(getTime() + ":BEGIN meta training")
-        NN_model_path = agent.run_meta_training(large_storage_folder, imitation_policy)
-        print(getTime() + ":END meta training")
+    print(getTime() + ":END meta training")
 
 
 
         # Read final model and evaluate.
-        agent.load_model(NN_model_path)
+        agent.load_model(NN_model_path_final)
+        #agent.load_model(NN_model_path)
 
         # prepare to run traditional bidding on the meta-trained model.
         setting = "{}, camp={}, algo={}, N={}, c0={}" \
-            .format(src, camp, "meta_bid", N, c0)
+            .format(src, actual_camp, "meta_bid", actual_N, c0)
         bid_log_path = config.projectPath + "bid-log/{}.txt".format(setting)
-        env = BidEnv(camp_info, aution_in_file)
 
-        (auction, imp, clk, cost) = agent.run(env, bid_log_path, N, c0,
+        env = BidEnv(actual_camp_info, actual_aution_in_file)
+
+        (auction, imp, clk, cost) = agent.run(env, bid_log_path, actual_N, c0,
                                               max_market_price, save_log=True)
 
         win_rate = imp / auction * 100

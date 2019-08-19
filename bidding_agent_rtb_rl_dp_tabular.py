@@ -146,6 +146,18 @@ class bidding_agent_rtb_rl_dp_tabular(bidding_agent):
                 if n >= N:
                     break
 
+    def load_Dnb(self, N, B, model_path):
+        self.D = [[0 for i in range(B)] for j in range(N)]
+        with open(model_path, "r") as fin:
+            n = 0
+            for line in fin:
+                line = line[:len(line) - 1].split("\t")
+                for b in range(B):
+                    self.D[n][b] = float(line[b])
+                n += 1
+                if n >= N:
+                    break
+
     def bid(self, n, b, theta, max_bid):
         a = 0
         if len(self.V) > 0:
@@ -219,5 +231,66 @@ class bidding_agent_rtb_rl_dp_tabular(bidding_agent):
             log_in.close()
 
         return auction, imp, clk, cost
+
+    def run_and_output_datasets(self, bid_log_path, N, c0, max_bid, input_type="file reader", delimiter=" ", save_log=False):
+        auction = 0
+        imp = 0
+        clk = 0
+        cost = 0
+
+        if save_log:
+            log_in = open(bid_log_path, "w")
+        B = int(self.cpm * c0 * N)
+
+        episode = 1
+        n = N
+        b = B
+
+        click = 0
+        theta, price = self.env.reset()
+        done = False
+
+        X = []
+        Y = []
+
+        while not done:
+
+
+            action = self.bid(n, b, theta, max_bid)
+            action = min(int(action), min(b, max_bid))
+
+            X.append([theta,price])
+            Y.append([action])
+
+            done, new_theta, new_price, result_imp, result_click = self.env.step(action)
+
+            log = getTime() + "\t{}\t{}_{}\t{}_{}_{}\t{}_{}\t".format(
+                episode, b, n, action, price, result_click, clk, imp)
+            if save_log:
+                log_in.write(log + "\n")
+
+            if result_imp == 1:
+                imp += 1
+                if result_click == 1:
+                    clk += 1
+                b -= price
+                cost += price
+            n -= 1
+            auction += 1
+
+            if n == 0:
+                episode += 1
+                n = N
+                b = B
+
+            theta = new_theta
+            price = new_price
+
+        if save_log:
+            log_in.flush()
+            log_in.close()
+
+        return X, Y
+
 
 

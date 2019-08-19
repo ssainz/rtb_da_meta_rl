@@ -76,7 +76,7 @@ def evaluate_rmse_torch(train_dir, n_list, b_sample_size, batch_size, b_bound, d
 
     return np.sqrt(square_error / cnt)
 
-def approximate(stop_after_first_it, policy , learning_rate, model, src, camp, N, D_function_path, large_storage_folder, NN_model_path, NN_model_txt_path, opt_obj, camp_info):
+def approximate(stop_after_first_it, policy , learning_rate, model, src, camp, N, large_storage_folder, NN_model_path, NN_model_txt_path, opt_obj, camp_info, X, Y):
     seeds = [0x0123, 0x4567, 0x3210, 0x7654, 0x89AB, 0xCDEF, 0xBA98, 0xFEDC,
              0x0123, 0x4567, 0x3210, 0x7654, 0x89AB, 0xCDEF, 0xBA98, 0xFEDC]
 
@@ -94,7 +94,7 @@ def approximate(stop_after_first_it, policy , learning_rate, model, src, camp, N
 
         b_bound = 800
         n_bound = 50
-        max_train_round = 10000
+        max_train_round = 1000
         #max_train_round = 2
         final_model_path = NN_model_path
 
@@ -102,29 +102,22 @@ def approximate(stop_after_first_it, policy , learning_rate, model, src, camp, N
         #n_sample_size = 2
         b_sample_size = 200
         #b_sample_size = 2
-        eval_n_sample_size = 500
-        eval_b_sample_size = 1000
-        batch_size = n_sample_size * b_sample_size
 
-        net_argv = [4, [dim, 30, 15, 1], "tanh"]
-        init_rag = avg_theta
+        eval_n_sample_pct = 0.2
+        eval_n_sample_size = len(X) * eval_n_sample_pct
+        eval_b_sample_size = 1000
+        #batch_size = n_sample_size * b_sample_size
+        batch_size = (len(X) * (1 - eval_n_sample_pct)) / n_sample_size # How many batches
+
+        X_arr = np.array(X)
+        Y_arr = np.array(Y)
+
         nn_approx = policy
 
         # need to split the D_function_path into one line files.
         train_dir = large_storage_folder + "/../fa-train/rlb_dnb_gamma=1_N={}_{}_1/".format(N, obj_type)
-        # print("train_dir = {}".format(train_dir))
-        if not os.path.exists(train_dir):
-            os.makedirs(train_dir)
-            with open(D_function_path, "r") as fin:
-                count = 0
-                for line in fin:
-                    save_path = train_dir + str(count) + ".txt"
-                    print(save_path)
-                    with open(save_path, "w") as fout:
-                        fout.write(line + "\n")
-                    count += 1
 
-        n_list = [i for i in range(n_bound + 1, N)]
+        #n_list = [i for i in range(n_bound + 1, N)]
 
         # print("n_list = {}".format(n_list))
 
@@ -157,19 +150,24 @@ def approximate(stop_after_first_it, policy , learning_rate, model, src, camp, N
                 _iter += 1
 
                 print("iteration {0} start".format(_iter))
-                np.random.shuffle(n_list)
+                #np.random.shuffle(n_list)
 
                 buf_loss = []
                 buf_predictions = []
                 buf_labels = []
-                _round = int(len(n_list) / n_sample_size)
+                _round = int((len(X_arr) * (1 - eval_n_sample_pct)) / batch_size)
                 # print("_round = {}".format(_round))
                 for _i in range(_round):
-                    batch_n = n_list[_i * n_sample_size: (_i + 1) * n_sample_size]
-                    batch_x_vecs, batch_value_labels = load_data(train_dir, batch_n, b_sample_size, b_bound,
-                                                                 dim)
-                    # print("batch_x_vecs, batch_value_labels")
-                    # print(batch_x_vecs, batch_value_labels)
+
+                    batch_x_vecs = X_arr[int(_i * batch_size): int((_i + 1) * batch_size)]
+                    batch_value_labels = Y_arr[int(_i * batch_size): int( (_i + 1) * batch_size)]
+                    #batch_x_vecs, batch_value_labels = load_data(train_dir, batch_n, b_sample_size, b_bound,
+                    #                                             dim)
+                    # print("batch_x_vecs")
+                    # print(batch_x_vecs)
+                    # print("batch_value_labels")
+                    # print(batch_value_labels)
+                    # exit()
 
                     batch_x = torch.FloatTensor(batch_x_vecs).to(cuda)
                     batch_y = torch.FloatTensor(batch_value_labels).to(cuda)
@@ -184,7 +182,8 @@ def approximate(stop_after_first_it, policy , learning_rate, model, src, camp, N
 
                     #batch_y_hat = policy(batch_x)
                     action_distribution = policy(batch_x)
-                    batch_y_hat = action_distribution.sample()
+                    #batch_y_hat = action_distribution.sample()
+                    batch_y_hat = action_distribution.rsample()
                     #actions_tensor
 
 
@@ -196,10 +195,20 @@ def approximate(stop_after_first_it, policy , learning_rate, model, src, camp, N
 
                     #reward = (batch_y_hat - batch_y).pow(2).sum() / batch_y_hat.shape[0]
                     reward = (batch_y_hat - batch_y).pow(2)
-                    reward = -reward # The smaller the MSE the better.
 
-                    loss = -(action_distribution.log_prob(batch_y_hat)) * reward
+                    # if _iter % 100 == 0:
+                    #     print(batch_y_hat)
+                    #     print(batch_y)
+
+                    #print(batch_y_hat - batch_y)
+                    #print(reward)
+                    #reward = -reward # The smaller the MSE the better.
+
+                    #loss = -(action_distribution.log_prob(batch_y_hat)) * reward
+                    loss = reward
+
                     loss = loss.sum() / batch_y_hat.shape[0]
+                    #print(loss)
 
                     # print("loss")
                     # print(loss)
@@ -220,8 +229,8 @@ def approximate(stop_after_first_it, policy , learning_rate, model, src, camp, N
 
 
                     #_, loss, batch_predictions = 1,2,3
-                    #batch_predictions = batch_y_hat.detach().to(cpu).numpy()
-                    batch_predictions = batch_y_hat.to(cpu).numpy()
+                    batch_predictions = batch_y_hat.detach().to(cpu).numpy()
+                    #batch_predictions = batch_y_hat.to(cpu).numpy()
                     loss = loss.to(cpu).item()
 
                     # print(batch_predictions)
@@ -244,16 +253,17 @@ def approximate(stop_after_first_it, policy , learning_rate, model, src, camp, N
                     buf_loss.max(), buf_loss.min(), buf_loss.mean(), buf_rmse / avg_theta, getTime())
                 print(buf_log)
 
-                np.random.shuffle(n_list)
+                #np.random.shuffle(n_list)
 
                 if stop_after_first_it:
                     return
 
-                eval_rmse = evaluate_rmse_torch(train_dir, n_list[:eval_n_sample_size], eval_b_sample_size,
-                                        batch_size,
-                                        b_bound, dim, policy)
-                eval_log = "iteration={}\ttime={}\teval rmse={}\tbuf rmse={}" \
-                  .format(_iter, time.time() - start_time, eval_rmse / avg_theta, buf_rmse / avg_theta)
+                # eval_rmse = evaluate_rmse_torch(train_dir, n_list[:eval_n_sample_size], eval_b_sample_size,
+                #                         batch_size,
+                #                         b_bound, dim, policy)
+                eval_log = "iteration={}\ttime={}\tbuf rmse={}" \
+                    .format(_iter, time.time() - start_time, buf_rmse / avg_theta)
+                  #.format(_iter, time.time() - start_time, eval_rmse / avg_theta, buf_rmse / avg_theta)
                 print(eval_log)
 
                 #EVAL PHASE
@@ -286,7 +296,7 @@ def approximate(stop_after_first_it, policy , learning_rate, model, src, camp, N
             #     eval_rmse = evaluate_rmse(train_dir, n_list, -1, batch_size, b_bound, dim, nn_approx, echo=True)
             #     print("campaign={}\tfull eval rmse={}".format(camp, eval_rmse / avg_theta))
 
-def create_D_function(camp):
+def create_D_function(camp, max_bid):
     large_storage_media = "/media/onetbssd/rlb/"
 
     src = "ipinyou"
@@ -330,12 +340,16 @@ def create_D_function(camp):
         # print("START: Approximating V function by dynamic programming... ")
         agent.calc_Dnb(N, B, max_market_price, m_pdf, D_function_path)
         # print("END: Approximating V function by dynamic programming.")
+    else:
+        agent.load_Dnb(N,B,D_function_path)
+
+    X, Y = agent.run_and_output_datasets(bid_log_path, N, c0, max_bid,  delimiter=" ", save_log=False)
 
     # Then train a NN using the Dnd function
     NN_model_path = large_storage_folder + "fa_dnb_gamma={}_N={}_{}.pickle".format(gamma, N, obj_type)
     NN_model_txt_path = large_storage_folder + "fa_dnb_gamma={}_N={}_{}.txt".format(gamma, N, obj_type)
 
-    return agent, src, N, D_function_path, large_storage_folder, NN_model_path, NN_model_txt_path, opt_obj, camp_info
+    return agent, src, N, D_function_path, large_storage_folder, NN_model_path, NN_model_txt_path, opt_obj, camp_info, X, Y
     # END -----------
 
 

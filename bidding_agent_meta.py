@@ -61,6 +61,7 @@ class bidding_agent_meta(bidding_agent):
                             help='learning rate for the 1-step gradient update of MAML')
 
         # Optimization
+        #parser.add_argument('--num-batches', type=int, default=0,
         parser.add_argument('--num-batches', type=int, default=32,
                             help='number of batches')
         parser.add_argument('--meta-batch-size', type=int, default=50,
@@ -200,8 +201,20 @@ class bidding_agent_meta(bidding_agent):
             #action = min(b, a)
             #a = min(int(theta * self.b0 / self.theta_avg), max_bid)
 
+            # print("price, action")
+            # if price < action:
+            #     print("Wins")
+            #     print(str(price) + "," + str(action))
+            #     exit()
+            # else:
+            #     print("Lose")
+            #     print(str(price) + "," + str(action))
+
 
             done, new_theta, new_price, result_imp, result_click = self.env.step(action)
+
+
+
 
             log = getTime() + "\t{}\t{}_{}\t{}_{}_{}\t{}\t".format(episode, b, n, a, result_click, clk, imp)
 
@@ -219,6 +232,7 @@ class bidding_agent_meta(bidding_agent):
 
             theta = new_theta
             price = new_price
+
 
             if n == 0:
                 episode += 1
