@@ -57,10 +57,32 @@ class BiddingMDPEnv(gym.Env):
 
         return tasks
 
+    def sample_target_task(self, N):
+
+        # build list of potential campaigns
+        task_space = []
+        for camp in config.ipinyou_camps:
+            if camp == config.ipinyou_camps_target:
+                task_space.append(camp)
+
+        tasks = []
+        for _ in range(1):
+            random_camp = task_space[ np.random.randint(0,len(task_space)) ]
+            file_location = config.ipinyouPath + random_camp + "/test.theta.txt"
+            tasks.append({'camp': random_camp,
+                          'file_location': file_location,
+                          'early_stop': N})
+
+        return tasks
+
     def reset_task(self, task):
         self._task = task
         self._camp = task['camp']
         self._file_location = task['file_location']
+
+        self._early_stop = None
+        if 'early_stop' in task:
+            self._early_stop = task['early_stop']
         self._file_contents = open(self._file_location, 'r')
 
         # Load the campaing.
@@ -103,6 +125,10 @@ class BiddingMDPEnv(gym.Env):
         observation[1] = self.price
 
         reward = ret_impression + ret_click
+
+        if self._early_stop is not None:
+            if self._early_stop < self._step:
+                done = True
 
         return observation, reward, done, self._task
 

@@ -395,18 +395,21 @@ for camp in camps:
         torch.cuda.empty_cache()
         large_storage_folder = large_storage_media + src + "/" + camp + "/bid-model/"
         print(getTime() + ":BEGIN meta training")
-        NN_model_path_final = agent.run_meta_training(large_storage_folder, imitation_policy)
+        NN_model_path_training = agent.run_meta_training(large_storage_folder, imitation_policy)
         print(getTime() + ":END meta training")
 
-
+        # Read N entries of the target campaing .
+        k_shoots_learning_size = 10
+        agent.load_model(NN_model_path_training)
+        NN_model_path_final = agent.run_marginal_meta_training(large_storage_folder, k_shoots_learning_size)
 
         # Read final model and evaluate.
         agent.load_model(NN_model_path_final)
         #agent.load_model(NN_model_path)
 
         # prepare to run traditional bidding on the meta-trained model.
-        setting = "{}, camp={}, algo={}, N={}, c0={}" \
-            .format(src, actual_camp, "meta_bid", actual_N, c0)
+        setting = "{}, camp={}, algo={}, N={}, c0={}, k={}" \
+            .format(src, actual_camp, "meta_bid", actual_N, c0, k_shoots_learning_size)
         bid_log_path = config.projectPath + "bid-log/{}.txt".format(setting)
 
         env = BidEnv(actual_camp_info, actual_aution_in_file)

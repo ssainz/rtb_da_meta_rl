@@ -36,7 +36,7 @@ class BatchSampler(object):
             with torch.no_grad():
                 observations_tensor = torch.from_numpy(observations).to(device=device)
                 actions_tensor = policy(observations_tensor, params=params).sample()
-                #actions_tensor = policy(observations_tensor, params=params)
+                # actions_tensor = policy(observations_tensor, params=params)
                 actions = actions_tensor.cpu().numpy()
             new_observations, rewards, dones, new_batch_ids, _ = self.envs.step(actions)
             episodes.append(observations, actions, rewards, batch_ids)
@@ -50,4 +50,8 @@ class BatchSampler(object):
 
     def sample_tasks(self, num_tasks):
         tasks = self._env.unwrapped.sample_tasks(num_tasks)
+        return tasks
+
+    def sample_target_task(self, N):
+        tasks = self._env.unwrapped.sample_target_task(N)
         return tasks

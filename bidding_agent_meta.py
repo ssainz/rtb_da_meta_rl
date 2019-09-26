@@ -17,10 +17,12 @@ from tensorboardX import SummaryWriter
 
 cpu_device = torch.device("cpu")
 
+
 def total_rewards(episodes_rewards, aggregation=torch.mean):
     rewards = torch.mean(torch.stack([aggregation(torch.sum(rewards, dim=0))
-        for rewards in episodes_rewards], dim=0))
+                                      for rewards in episodes_rewards], dim=0))
     return rewards.item()
+
 
 class bidding_agent_meta(bidding_agent):
 
@@ -61,12 +63,13 @@ class bidding_agent_meta(bidding_agent):
                             help='learning rate for the 1-step gradient update of MAML')
 
         # Optimization
-        #parser.add_argument('--num-batches', type=int, default=0,
-        parser.add_argument('--num-batches', type=int, default=32,
+        # parser.add_argument('--num-batches', type=int, default=0,
+        # parser.add_argument('--num-batches', type=int, default=32,
+        parser.add_argument('--num-batches', type=int, default=50,
                             help='number of batches')
         parser.add_argument('--meta-batch-size', type=int, default=50,
-        #parser.add_argument('--meta-batch-size', type=int, default=50,
-        #parser.add_argument('--meta-batch-size', type=int, default=2,
+                            # parser.add_argument('--meta-batch-size', type=int, default=50,
+                            # parser.add_argument('--meta-batch-size', type=int, default=2,
                             help='number of tasks per batch')
         parser.add_argument('--max-kl', type=float, default=1e-2,
                             help='maximum value for the KL constraint in TRPO')
@@ -74,8 +77,8 @@ class bidding_agent_meta(bidding_agent):
                             help='number of iterations of conjugate gradient')
         parser.add_argument('--cg-damping', type=float, default=1e-5,
                             help='damping in conjugate gradient')
-        #parser.add_argument('--ls-max-steps', type=int, default=2,
-        #parser.add_argument('--ls-max-steps', type=int, default=15,
+        # parser.add_argument('--ls-max-steps', type=int, default=2,
+        # parser.add_argument('--ls-max-steps', type=int, default=15,
         parser.add_argument('--ls-max-steps', type=int, default=15,
                             help='maximum number of iterations for line search')
         parser.add_argument('--ls-backtrack-ratio', type=float, default=0.8,
@@ -84,13 +87,23 @@ class bidding_agent_meta(bidding_agent):
         # Miscellaneous
         parser.add_argument('--output-folder', type=str, default='maml',
                             help='name of the output folder')
-        #parser.add_argument('--num-workers', type=int, default=mp.cpu_count() - 2,
+        # parser.add_argument('--num-workers', type=int, default=mp.cpu_count() - 2,
         parser.add_argument('--num-workers', type=int, default=1,
                             help='number of workers for trajectories sampling')
         parser.add_argument('--device', type=str, default='cuda',
                             help='set the device (cpu or cuda)')
 
         args = parser.parse_args()
+
+        self.batch_size = args.batch_size
+        self.max_kl = args.max_kl
+        self.cg_iters = args.cg_iters
+        self.first_order = args.first_order
+        self.cg_damping = args.cg_damping
+        self.ls_max_steps = args.ls_max_steps
+        self.ls_backtrack_ratio = args.ls_backtrack_ratio
+        self.output_folder = args.output_folder
+        self.num_batches = args.num_batches
 
         continuous_actions = (args.env_name in ['BiddingMDP-v0', 'AntVel-v1', 'AntDir-v1',
                                                 'AntPos-v0', 'HalfCheetahVel-v1', 'HalfCheetahDir-v1',
@@ -102,8 +115,8 @@ class bidding_agent_meta(bidding_agent):
         if not os.path.exists('./saves'):
             os.makedirs('./saves')
         # Device
-       # args.device = torch.device(args.device
-       #                            if torch.cuda.is_available() else 'cpu')
+        # args.device = torch.device(args.device
+        #                            if torch.cuda.is_available() else 'cpu')
         args.device = torch.device("cpu")
 
         writer = SummaryWriter('./logs/{0}'.format(args.output_folder))
@@ -159,11 +172,46 @@ class bidding_agent_meta(bidding_agent):
             final_model_path = final_model_folder + "meta_rl_gamma_policy_{}.pt".format(batch)
             with open(final_model_path, 'wb') as f:
                 torch.save(policy.state_dict(), f)
-            return final_model_path
+
+        self.metalearner = metalearner
+        return final_model_path
 
     def load_model(self, final_model_path):
 
         self.policy.load_state_dict(torch.load(final_model_path))
+
+    def run_marginal_meta_training(self, final_model_folder, N):
+
+        if self.policy is None or self.metalearning is None:
+            return
+
+        policy = self.policy
+        metalearner = self.metalearner
+        sampler = BatchSampler("BiddingMDP-v0", batch_size=self.batch_size,
+                               num_workers=1)
+
+        tasks = sampler.sample_target_task(N)
+        episodes = metalearner.sample(tasks, first_order=self.first_order)
+        metalearner.step(episodes, max_kl=self.max_kl, cg_iters=self.cg_iters,
+                         cg_damping=self.cg_damping, ls_max_steps=self.ls_max_steps,
+                         ls_backtrack_ratio=self.ls_backtrack_ratio)
+
+        # Tensorboard
+        writer = SummaryWriter('./logs/{0}'.format(self.output_folder))
+        writer.add_scalar('total_rewards/before_update',
+                          total_rewards([ep.rewards for ep, _ in episodes]), self.num_batches)
+        writer.add_scalar('total_rewards/after_update',
+                          total_rewards([ep.rewards for _, ep in episodes]), self.num_batches)
+
+        torch.cuda.empty_cache()
+
+        # Save policy network
+        final_model_path = final_model_folder + "meta_rl_gamma_policy_{}.pt".format(self.num_batches)
+        with open(final_model_path, 'wb') as f:
+            torch.save(policy.state_dict(), f)
+
+        self.metalearner = metalearner
+        return final_model_path
 
     def run(self, env, bid_log_path, N, c0, max_bid, save_log=False):
 
@@ -189,17 +237,16 @@ class bidding_agent_meta(bidding_agent):
             observation[0] = theta
             observation[1] = price
 
-
-            #observations_tensor = torch.from_numpy(observation).to(torch.device("cuda"))
+            # observations_tensor = torch.from_numpy(observation).to(torch.device("cuda"))
             observations_tensor = torch.from_numpy(observation).to(torch.device("cpu"))
-            #print("observation_tensor device is "+ str(observations_tensor.device))
+            # print("observation_tensor device is "+ str(observations_tensor.device))
             with torch.no_grad():
                 actions_tensor = self.policy(observations_tensor).sample()
                 a = actions_tensor.cpu().numpy()
 
             action = a
-            #action = min(b, a)
-            #a = min(int(theta * self.b0 / self.theta_avg), max_bid)
+            # action = min(b, a)
+            # a = min(int(theta * self.b0 / self.theta_avg), max_bid)
 
             # print("price, action")
             # if price < action:
@@ -210,11 +257,7 @@ class bidding_agent_meta(bidding_agent):
             #     print("Lose")
             #     print(str(price) + "," + str(action))
 
-
             done, new_theta, new_price, result_imp, result_click = self.env.step(action)
-
-
-
 
             log = getTime() + "\t{}\t{}_{}\t{}_{}_{}\t{}\t".format(episode, b, n, a, result_click, clk, imp)
 
@@ -232,7 +275,6 @@ class bidding_agent_meta(bidding_agent):
 
             theta = new_theta
             price = new_price
-
 
             if n == 0:
                 episode += 1

@@ -94,7 +94,7 @@ def approximate(stop_after_first_it, policy , learning_rate, model, src, camp, N
 
         b_bound = 800
         n_bound = 50
-        max_train_round = 1000
+        max_train_round = 10000
         #max_train_round = 2
         final_model_path = NN_model_path
 
@@ -251,7 +251,7 @@ def approximate(stop_after_first_it, policy , learning_rate, model, src, camp, N
                 buf_rmse = np.sqrt(mean_squared_error(buf_labels, buf_predictions))
                 buf_log = "buf loss, max={:.6f}\tmin={:.6f}\tmean={:.6f}\tbuf rmse={}\ttime={}".format(
                     buf_loss.max(), buf_loss.min(), buf_loss.mean(), buf_rmse / avg_theta, getTime())
-                print(buf_log)
+                #OUTPUT!#print(buf_log)
 
                 #np.random.shuffle(n_list)
 
@@ -264,7 +264,7 @@ def approximate(stop_after_first_it, policy , learning_rate, model, src, camp, N
                 eval_log = "iteration={}\ttime={}\tbuf rmse={}" \
                     .format(_iter, time.time() - start_time, buf_rmse / avg_theta)
                   #.format(_iter, time.time() - start_time, eval_rmse / avg_theta, buf_rmse / avg_theta)
-                print(eval_log)
+                #OUTPUT!#print(eval_log)
 
                 #EVAL PHASE
                 # eval_rmse = evaluate_rmse(train_dir, n_list[:eval_n_sample_size], eval_b_sample_size,
