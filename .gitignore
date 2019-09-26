@@ -1,3 +1,4 @@
 *.pickle
 *.txt
 *.pt
+events.out*
