@@ -2,16 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4086937d-1a1e-4a1f-8b54-4223eab51f0a" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/bid_performance_new_campaigns.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bid_performance_on_future_auctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/rtb_da_meta_rl.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/rtb_da_meta_rl.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bid_meta.py" beforeDir="false" afterPath="$PROJECT_DIR$/bid_meta.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bid_train_nn_with_d_function.py" beforeDir="false" afterPath="$PROJECT_DIR$/bid_train_nn_with_d_function.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bid_performance_on_future_auctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/bid_performance_on_future_auctions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bidding_agent_meta.py" beforeDir="false" afterPath="$PROJECT_DIR$/bidding_agent_meta.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/maml_rl/envs/bidding.py" beforeDir="false" afterPath="$PROJECT_DIR$/maml_rl/envs/bidding.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/maml_rl/sampler.py" beforeDir="false" afterPath="$PROJECT_DIR$/maml_rl/sampler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/maml_rl/metalearner.py" beforeDir="false" afterPath="$PROJECT_DIR$/maml_rl/metalearner.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/bid-performance/ipinyou_N=1000_c0=0.125_obj=clk_clkvp=1.txt" beforeDir="false" afterPath="$PROJECT_DIR$/project/bid-performance/ipinyou_N=1000_c0=0.125_obj=clk_clkvp=1.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/saves/maml/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/saves/maml/config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -42,25 +39,6 @@
         <option value="Python Script" />
       </list>
     </option>
-  </component>
-  <component name="FindInProjectRecents">
-    <findStrings>
-      <find>step</find>
-      <find>auction_in</find>
-      <find>first_order</find>
-      <find>self.cpm</find>
-      <find>cpm</find>
-      <find>forward</find>
-      <find>num_batches</find>
-      <find>self.policy</find>
-      <find>max_kl</find>
-      <find>final_model_path</find>
-      <find>args.device</find>
-      <find>max_train_round</find>
-      <find>main</find>
-      <find>max_market</find>
-      <find>max_market_price</find>
-    </findStrings>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -122,7 +100,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1560864501565</updated>
-      <workItem from="1569530411161" duration="6521000" />
+      <workItem from="1569530411161" duration="13689000" />
     </task>
     <servers />
   </component>

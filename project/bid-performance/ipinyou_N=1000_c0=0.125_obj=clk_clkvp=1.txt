@@ -1,3 +1,0 @@
-setting                                                	 objective	 auction	impression	   click	    cost	 win-rate	     CPM	    eCPC
-ipinyou, camp=2997, algo=lin_bid, N=1000, c0=0.125     	      159.0	 156062.0	    71844.0	    159.0	 988917.0	    46.04%	    13.76	     6.22
-ipinyou, camp=2997, algo=rlb_rl_dp_tabular, N=1000, c0=0.125	      95.75	 156062.0	    28973.5	    95.75	 1232407.125	    18.57%	    42.54	    12.87

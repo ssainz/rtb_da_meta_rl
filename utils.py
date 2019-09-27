@@ -3,7 +3,7 @@ import time
 import tensorflow as tf
 import pickle
 import math
-
+import os
 
 
 # obj_type: clk, profit, imp
@@ -183,3 +183,34 @@ def activate_calc(act_func, x):
     else:
         return sigmoid(x)
 
+def merge_files(files_list, training_file, k_shoots):
+
+    memory = []
+    for filename in files_list:
+        with open(filename) as f:
+            for line in f:
+                memory.append(line)
+
+    with open(training_file) as f:
+        count = 0
+        for line in f:
+            memory.append(line)
+            count += 1
+            if count > k_shoots:
+                break
+
+    folder = generate_temp_folder()
+    output_filename = folder + "merged_file_" + str(time.time()) + ".txt"
+    with open(output_filename, 'w') as filehandle:
+        filehandle.writelines("%s\n" % place for place in memory)
+
+    return output_filename
+
+def generate_temp_folder():
+
+    current_dir = os.getcwd()
+    final_dir = current_dir + "/merged_files/" + str(time.time()) + "/"
+    if not os.path.exists(final_dir):
+        os.makedirs(final_dir)
+
+    return final_dir

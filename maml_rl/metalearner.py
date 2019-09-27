@@ -187,8 +187,8 @@ class MetaLearner(object):
         # Line search
         step_size = 1.0
         for _ in range(ls_max_steps):
-            print("metalearner.py - ls_max_steps")
-            print(_)
+            #print("metalearner.py - ls_max_steps")
+            #print(_)
             vector_to_parameters(old_params - step_size * step,
                                  self.policy.parameters())
             loss, kl, _ = self.surrogate_loss(episodes, old_pis=old_pis)

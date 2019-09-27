@@ -51,6 +51,7 @@ class bidding_agent_meta(bidding_agent):
                             help='use the first-order approximation of MAML')
 
         # Policy network (relu activation function)
+        #parser.add_argument('--hidden-size', type=int, default=50,
         parser.add_argument('--hidden-size', type=int, default=200,
                             help='number of hidden units per layer')
         parser.add_argument('--num-layers', type=int, default=2,
@@ -63,13 +64,13 @@ class bidding_agent_meta(bidding_agent):
                             help='learning rate for the 1-step gradient update of MAML')
 
         # Optimization
-        # parser.add_argument('--num-batches', type=int, default=0,
+        parser.add_argument('--num-batches', type=int, default=2,
         # parser.add_argument('--num-batches', type=int, default=32,
-        parser.add_argument('--num-batches', type=int, default=50,
+        # parser.add_argument('--num-batches', type=int, default=50,
                             help='number of batches')
-        parser.add_argument('--meta-batch-size', type=int, default=50,
+        #parser.add_argument('--meta-batch-size', type=int, default=50,
                             # parser.add_argument('--meta-batch-size', type=int, default=50,
-                            # parser.add_argument('--meta-batch-size', type=int, default=2,
+        parser.add_argument('--meta-batch-size', type=int, default=2,
                             help='number of tasks per batch')
         parser.add_argument('--max-kl', type=float, default=1e-2,
                             help='maximum value for the KL constraint in TRPO')
@@ -77,9 +78,9 @@ class bidding_agent_meta(bidding_agent):
                             help='number of iterations of conjugate gradient')
         parser.add_argument('--cg-damping', type=float, default=1e-5,
                             help='damping in conjugate gradient')
-        # parser.add_argument('--ls-max-steps', type=int, default=2,
+        parser.add_argument('--ls-max-steps', type=int, default=2,
         # parser.add_argument('--ls-max-steps', type=int, default=15,
-        parser.add_argument('--ls-max-steps', type=int, default=15,
+        # parser.add_argument('--ls-max-steps', type=int, default=15,
                             help='maximum number of iterations for line search')
         parser.add_argument('--ls-backtrack-ratio', type=float, default=0.8,
                             help='maximum number of iterations for line search')
@@ -95,7 +96,7 @@ class bidding_agent_meta(bidding_agent):
 
         args = parser.parse_args()
 
-        self.batch_size = args.batch_size
+        self.fast_batch_size = args.fast_batch_size
         self.max_kl = args.max_kl
         self.cg_iters = args.cg_iters
         self.first_order = args.first_order
@@ -187,7 +188,7 @@ class bidding_agent_meta(bidding_agent):
 
         policy = self.policy
         metalearner = self.metalearner
-        sampler = BatchSampler("BiddingMDP-v0", batch_size=self.batch_size,
+        sampler = BatchSampler("BiddingMDP-v0", batch_size=self.fast_batch_size,
                                num_workers=1)
 
         tasks = sampler.sample_target_task(N)
