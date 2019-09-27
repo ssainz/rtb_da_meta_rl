@@ -4,3 +4,4 @@
 events.out*
 **/merged_file*
 merged_files/
+**/train_camp/
