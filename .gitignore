@@ -2,3 +2,5 @@
 *.txt
 *.pt
 events.out*
+**/merged_file*
+merged_files/
