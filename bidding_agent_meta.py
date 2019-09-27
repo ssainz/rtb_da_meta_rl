@@ -183,7 +183,7 @@ class bidding_agent_meta(bidding_agent):
 
     def run_marginal_meta_training(self, final_model_folder, N):
 
-        if self.policy is None or self.metalearning is None:
+        if self.policy is None or self.metalearner is None:
             return
 
         policy = self.policy

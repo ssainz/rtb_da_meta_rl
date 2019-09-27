@@ -5,7 +5,6 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bid_performance_on_future_auctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/bid_performance_on_future_auctions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bidding_agent_meta.py" beforeDir="false" afterPath="$PROJECT_DIR$/bidding_agent_meta.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/maml_rl/metalearner.py" beforeDir="false" afterPath="$PROJECT_DIR$/maml_rl/metalearner.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/project/bid-performance/ipinyou_N=1000_c0=0.125_obj=clk_clkvp=1.txt" beforeDir="false" afterPath="$PROJECT_DIR$/project/bid-performance/ipinyou_N=1000_c0=0.125_obj=clk_clkvp=1.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/saves/maml/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/saves/maml/config.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
@@ -100,7 +99,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1560864501565</updated>
-      <workItem from="1569530411161" duration="13689000" />
+      <workItem from="1569530411161" duration="16526000" />
     </task>
     <servers />
   </component>

@@ -31,11 +31,11 @@ gamma = 1
 #agents_to_execute = ['lin','rlb_rl_dp_tabular', "rlb_rl_fa", 'meta']
 #agents_to_execute = ['meta']
 agents_to_execute = ['meta_imitation']
-#agents_to_execute = ['meta_imitation', 'lin', 'rlb_rl_dp_tabular']
+#agents_to_execute = ['lin', 'rlb_rl_dp_tabular','meta_imitation']
 #agents_to_execute = ['lin', 'rlb_rl_dp_tabular','meta']
 #agents_to_execute = ["rlb_rl_fa"]
 
-k_shoots_list = [20]
+k_shoots_list = [20, 40, 100]
 
 
 src = "ipinyou"
@@ -92,14 +92,13 @@ for k_shoots_learning_size in k_shoots_list:
             cost_train_list.append(train_camp_info['cost_train'])
             clk_train_list.append(train_camp_info['clk_train'])
             imp_train_list.append(train_camp_info["imp_train"])
-            price_counter_list.append(train_camp_info['price_counter_train'])
-            file_list.append(train_aution_in_file=data_path + train_camp + "/test.theta.txt")
+            price_counter_list.extend(train_camp_info['price_counter_train'])
+            file_list.append(data_path + train_camp + "/test.theta.txt")
         overall_camp_info['cost_train'] = np.mean(cost_train_list)
         overall_camp_info['clk_train'] = np.mean(clk_train_list)
         overall_camp_info['imp_train'] = np.mean(imp_train_list)
-        overall_camp_info['price_counter_train'] = np.mean(price_counter_list)
+        overall_camp_info['price_counter_train'] = price_counter_list
         overall_train_auction_file = merge_files(file_list, aution_in_file, k_shoots_learning_size)
-
 
         # Linear-Bid
         if 'lin' in agents_to_execute:
@@ -110,8 +109,8 @@ for k_shoots_learning_size in k_shoots_list:
             train_env = BidEnv(overall_camp_info, overall_train_auction_file)
             training_agent = bidding_agent_linear()
             training_agent.init(train_env, overall_camp_info)
-            setting = "{}, camp={}, algo={}, N={}, c0={}" \
-                .format(src, camp, "lin_bid", N, c0)
+            setting = "{}, camp={}, algo={}, N={}, c0={}, k={}" \
+                .format(src, camp, "lin_bid", N, c0, k_shoots_learning_size)
             bid_log_path = config.projectPath + "bid-log/{}.txt".format(setting)
 
             if not os.path.exists(data_path + camp + "/train_camp/" + camp + "/bid-model/"):
@@ -149,8 +148,8 @@ for k_shoots_learning_size in k_shoots_list:
             train_agent = bidding_agent_rtb_rl_dp_tabular()
             train_agent.init(train_env, overall_camp_info, train_opt_obj, gamma)
 
-            setting = "{}, camp={}, algo={}, N={}, c0={}" \
-                .format(src, camp, "rlb_rl_dp_tabular", N, c0)
+            setting = "{}, camp={}, algo={}, N={}, c0={}, k={}" \
+                .format(src, camp, "rlb_rl_dp_tabular", N, c0, k_shoots_learning_size)
             bid_log_path = config.projectPath + "bid-log/{}.txt".format(setting)
 
             # Approximating V function
@@ -207,8 +206,8 @@ for k_shoots_learning_size in k_shoots_list:
             train_agent = bidding_agent_rtb_rl_dp_tabular()
             train_agent.init(train_env, overall_camp_info, train_opt_obj, gamma)
 
-            setting = "{}, camp={}, algo={}, N={}, c0={}" \
-                .format(src, camp, "rlb_rl_fa", N, c0)
+            setting = "{}, camp={}, algo={}, N={}, c0={}, k={}" \
+                .format(src, camp, "rlb_rl_fa", N, c0, k_shoots_learning_size)
             bid_log_path = config.projectPath + "bid-log/{}.txt".format(setting)
 
             # Approximating D(t,b) function
@@ -342,7 +341,6 @@ for k_shoots_learning_size in k_shoots_list:
             print(getTime() + ":END meta training")
 
             # Read K-shoot training entries of the target campaing .
-            k_shoots_learning_size = 10
             agent.load_model(NN_model_path_training)
             NN_model_path_final = agent.run_marginal_meta_training(large_storage_folder, k_shoots_learning_size)
 

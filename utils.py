@@ -202,7 +202,7 @@ def merge_files(files_list, training_file, k_shoots):
     folder = generate_temp_folder()
     output_filename = folder + "merged_file_" + str(time.time()) + ".txt"
     with open(output_filename, 'w') as filehandle:
-        filehandle.writelines("%s\n" % place for place in memory)
+        filehandle.writelines("%s" % place for place in memory)
 
     return output_filename
 
