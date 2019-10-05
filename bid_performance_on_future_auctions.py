@@ -113,7 +113,7 @@ for T_shoots_learning_size in T_shoots_list:
             train_env = BidEnv(overall_camp_info, overall_train_auction_file)
             training_agent = bidding_agent_linear()
             training_agent.init(train_env, overall_camp_info)
-            setting = "{}, camp={}, algo={}, N={}, c0={}, k={}" \
+            setting = "{}, camp={}, algo={}, N={}, c0={}, T={}" \
                 .format(src, camp, "lin_bid", N, c0, T_shoots_learning_size)
             bid_log_path = config.projectPath + "bid-log/{}.txt".format(setting)
 
@@ -152,7 +152,7 @@ for T_shoots_learning_size in T_shoots_list:
             train_agent = bidding_agent_rtb_rl_dp_tabular()
             train_agent.init(train_env, overall_camp_info, train_opt_obj, gamma)
 
-            setting = "{}, camp={}, algo={}, N={}, c0={}, k={}" \
+            setting = "{}, camp={}, algo={}, N={}, c0={}, T={}" \
                 .format(src, camp, "rlb_rl_dp_tabular", N, c0, T_shoots_learning_size)
             bid_log_path = config.projectPath + "bid-log/{}.txt".format(setting)
 
@@ -210,7 +210,7 @@ for T_shoots_learning_size in T_shoots_list:
             train_agent = bidding_agent_rtb_rl_dp_tabular()
             train_agent.init(train_env, overall_camp_info, train_opt_obj, gamma)
 
-            setting = "{}, camp={}, algo={}, N={}, c0={}, k={}" \
+            setting = "{}, camp={}, algo={}, N={}, c0={}, T={}" \
                 .format(src, camp, "rlb_rl_fa", N, c0, T_shoots_learning_size)
             bid_log_path = config.projectPath + "bid-log/{}.txt".format(setting)
 
@@ -359,7 +359,7 @@ for T_shoots_learning_size in T_shoots_list:
             #agent.load_model(NN_model_path)
 
             # prepare to run traditional bidding on the meta-trained model.
-            setting = "{}, camp={}, algo={}, N={}, c0={}, k={}" \
+            setting = "{}, camp={}, algo={}, N={}, c0={}, T={}" \
                 .format(src, actual_camp, "meta_bid", actual_N, c0, T_shoots_learning_size)
             bid_log_path = config.projectPath + "bid-log/{}.txt".format(setting)
 

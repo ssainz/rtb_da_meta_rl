@@ -4,8 +4,7 @@
     <list default="true" id="4086937d-1a1e-4a1f-8b54-4223eab51f0a" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bid_performance_on_future_auctions.py" beforeDir="false" afterPath="$PROJECT_DIR$/bid_performance_on_future_auctions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bid_train_nn_with_d_function.py" beforeDir="false" afterPath="$PROJECT_DIR$/bid_train_nn_with_d_function.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/saves/maml/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/saves/maml/config.json" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -97,7 +96,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1560864501565</updated>
-      <workItem from="1569530411161" duration="29946000" />
+      <workItem from="1569530411161" duration="31311000" />
     </task>
     <servers />
   </component>
