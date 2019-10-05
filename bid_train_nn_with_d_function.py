@@ -94,7 +94,8 @@ def approximate(stop_after_first_it, policy , learning_rate, model, src, camp, N
 
         b_bound = 800
         n_bound = 50
-        max_train_round = 10000
+        max_train_round = 500
+        #max_train_round = 1000
         #max_train_round = 2
         final_model_path = NN_model_path
 
@@ -141,7 +142,7 @@ def approximate(stop_after_first_it, policy , learning_rate, model, src, camp, N
             #    write_log(log_path, nn_approx.log)
 
 
-            print("model initialized")
+            #print("model initialized")
 
             _iter = 0
             perf = 1e5
@@ -149,7 +150,7 @@ def approximate(stop_after_first_it, policy , learning_rate, model, src, camp, N
             while True:
                 _iter += 1
 
-                print("iteration {0} start".format(_iter))
+                #print("iteration {0} start".format(_iter))
                 #np.random.shuffle(n_list)
 
                 buf_loss = []

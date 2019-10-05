@@ -35,7 +35,11 @@ agents_to_execute = ['meta_imitation']
 #agents_to_execute = ['lin', 'rlb_rl_dp_tabular','meta']
 #agents_to_execute = ["rlb_rl_fa"]
 
-k_shoots_list = [20, 40, 100]
+total_bids_in_camp_2997 = 156063
+k_shoots_list = [.1, .2, .3, .4, .5, .6, .7, .80, .9, 1]
+k_shoots_list = np.array(k_shoots_list)
+k_shoots_list = k_shoots_list * total_bids_in_camp_2997
+k_shoots_list = k_shoots_list.astype(int)
 
 
 src = "ipinyou"
@@ -74,31 +78,31 @@ for k_shoots_learning_size in k_shoots_list:
 
 
         # Create training merged set:
-
         train_camps = []
 
         for train_camp in config.ipinyou_camps:
             if train_camp != camp:
                 train_camps.append(train_camp)
 
-        overall_camp_info = {}
-        cost_train_list = []
-        clk_train_list = []
-        imp_train_list = []
-        file_list = []
-        price_counter_list = []
-        for train_camp in train_camps:
-            train_camp_info = config.get_camp_info(train_camp, src)
-            cost_train_list.append(train_camp_info['cost_train'])
-            clk_train_list.append(train_camp_info['clk_train'])
-            imp_train_list.append(train_camp_info["imp_train"])
-            price_counter_list.extend(train_camp_info['price_counter_train'])
-            file_list.append(data_path + train_camp + "/test.theta.txt")
-        overall_camp_info['cost_train'] = np.mean(cost_train_list)
-        overall_camp_info['clk_train'] = np.mean(clk_train_list)
-        overall_camp_info['imp_train'] = np.mean(imp_train_list)
-        overall_camp_info['price_counter_train'] = price_counter_list
-        overall_train_auction_file = merge_files(file_list, aution_in_file, k_shoots_learning_size)
+        if len(agents_to_execute) > 1 or agents_to_execute[0] != "meta_imitation":
+            overall_camp_info = {}
+            cost_train_list = []
+            clk_train_list = []
+            imp_train_list = []
+            file_list = []
+            price_counter_list = []
+            for train_camp in train_camps:
+                train_camp_info = config.get_camp_info(train_camp, src)
+                cost_train_list.append(train_camp_info['cost_train'])
+                clk_train_list.append(train_camp_info['clk_train'])
+                imp_train_list.append(train_camp_info["imp_train"])
+                price_counter_list.extend(train_camp_info['price_counter_train'])
+                file_list.append(data_path + train_camp + "/test.theta.txt")
+            overall_camp_info['cost_train'] = np.mean(cost_train_list)
+            overall_camp_info['clk_train'] = np.mean(clk_train_list)
+            overall_camp_info['imp_train'] = np.mean(imp_train_list)
+            overall_camp_info['price_counter_train'] = price_counter_list
+            overall_train_auction_file = merge_files(file_list, aution_in_file, k_shoots_learning_size)
 
         # Linear-Bid
         if 'lin' in agents_to_execute:
@@ -264,7 +268,7 @@ for k_shoots_learning_size in k_shoots_list:
 
         if 'meta_imitation' in agents_to_execute:
             train_camps = []
-            overwrite = False
+            overwrite = True
             actual_camp = camp
             actual_camp_info = camp_info
             actual_aution_in_file = data_path + camp + "/test.theta.txt"
@@ -336,15 +340,21 @@ for k_shoots_learning_size in k_shoots_list:
             agent = bidding_agent_meta(camp_info)
             torch.cuda.empty_cache()
             large_storage_folder = large_storage_media + src + "/" + camp + "/bid-model/"
-            print(getTime() + ":BEGIN meta training")
+            print(str(dt.datetime.now()) + getTime() + ":BEGIN meta training")
             NN_model_path_training = agent.run_meta_training(large_storage_folder, imitation_policy)
-            print(getTime() + ":END meta training")
+            print(str(dt.datetime.now()) + getTime() + ":END meta training")
 
             # Read K-shoot training entries of the target campaing .
             agent.load_model(NN_model_path_training)
             NN_model_path_final = agent.run_marginal_meta_training(large_storage_folder, k_shoots_learning_size)
 
             # Read final model and evaluate.
+            agent = bidding_agent_meta(camp_info)
+            agent.policy = ContinuousMLPPolicy(
+                int(np.prod(sampler.envs.observation_space.shape)),
+                int(np.prod(sampler.envs.action_space.shape)),
+                hidden_sizes=(400,) * 3)
+            print(str(dt.datetime.now())  + "Final eval: loading file: " + NN_model_path_final)
             agent.load_model(NN_model_path_final)
             #agent.load_model(NN_model_path)
 
@@ -365,6 +375,7 @@ for k_shoots_learning_size in k_shoots_list:
             log = "{:<80}\t{:>10}\t{:>8}\t{:>10}\t{:>8}\t{:>8}\t{:>8.2f}%\t{:>8.2f}\t{:>8.2f}" \
                 .format(setting, obj, auction, imp, clk, cost, win_rate, cpm, ecpc)
             print(log)
+
 
         print( " Finish processing camp = {}".format(camp))
 

@@ -89,7 +89,7 @@ class bidding_agent_meta(bidding_agent):
         parser.add_argument('--output-folder', type=str, default='maml',
                             help='name of the output folder')
         # parser.add_argument('--num-workers', type=int, default=mp.cpu_count() - 2,
-        parser.add_argument('--num-workers', type=int, default=1,
+        parser.add_argument('--num-workers', type=int, default=4,
                             help='number of workers for trajectories sampling')
         parser.add_argument('--device', type=str, default='cuda',
                             help='set the device (cpu or cuda)')
@@ -191,25 +191,28 @@ class bidding_agent_meta(bidding_agent):
         sampler = BatchSampler("BiddingMDP-v0", batch_size=self.fast_batch_size,
                                num_workers=1)
 
-        tasks = sampler.sample_target_task(N)
-        episodes = metalearner.sample(tasks, first_order=self.first_order)
-        metalearner.step(episodes, max_kl=self.max_kl, cg_iters=self.cg_iters,
-                         cg_damping=self.cg_damping, ls_max_steps=self.ls_max_steps,
-                         ls_backtrack_ratio=self.ls_backtrack_ratio)
+        for batch in range(40):
+            #print("bidding_agent_meta:run_marginal_meta_training:iteration " + str(batch) + " START")
+            tasks = sampler.sample_target_task(N)
+            episodes = metalearner.sample(tasks, first_order=self.first_order)
+            metalearner.step(episodes, max_kl=self.max_kl, cg_iters=self.cg_iters,
+                             cg_damping=self.cg_damping, ls_max_steps=self.ls_max_steps,
+                             ls_backtrack_ratio=self.ls_backtrack_ratio)
 
-        # Tensorboard
-        writer = SummaryWriter('./logs/{0}'.format(self.output_folder))
-        writer.add_scalar('total_rewards/before_update',
-                          total_rewards([ep.rewards for ep, _ in episodes]), self.num_batches)
-        writer.add_scalar('total_rewards/after_update',
-                          total_rewards([ep.rewards for _, ep in episodes]), self.num_batches)
+            # Tensorboard
+            writer = SummaryWriter('./logs/{0}'.format(self.output_folder))
+            writer.add_scalar('total_rewards/before_update',
+                              total_rewards([ep.rewards for ep, _ in episodes]), self.num_batches)
+            writer.add_scalar('total_rewards/after_update',
+                              total_rewards([ep.rewards for _, ep in episodes]), self.num_batches)
 
-        torch.cuda.empty_cache()
+            torch.cuda.empty_cache()
 
-        # Save policy network
-        final_model_path = final_model_folder + "meta_rl_gamma_policy_{}.pt".format(self.num_batches)
-        with open(final_model_path, 'wb') as f:
-            torch.save(policy.state_dict(), f)
+            # Save policy network
+            final_model_path = final_model_folder + "meta_rl_gamma_policy_{}.pt".format(self.num_batches)
+            with open(final_model_path, 'wb') as f:
+                torch.save(policy.state_dict(), f)
+            #print("bidding_agent_meta:run_marginal_meta_training:iteration " + str(batch) + " END")
 
         self.metalearner = metalearner
         return final_model_path
