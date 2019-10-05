@@ -94,7 +94,7 @@ def approximate(stop_after_first_it, policy , learning_rate, model, src, camp, N
 
         b_bound = 800
         n_bound = 50
-        max_train_round = 500
+        max_train_round = 100
         #max_train_round = 1000
         #max_train_round = 2
         final_model_path = NN_model_path

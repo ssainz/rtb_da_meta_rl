@@ -7,6 +7,7 @@ import datetime as dt
 from utils import Opt_Obj
 from utils import calc_m_pdf
 from utils import merge_files
+from utils import generate_training_and_evaluation_files_for_target_camp
 from bidding_environment import BidEnv
 from bidding_agent_linear import bidding_agent_linear
 from bidding_agent_rtb_rl_dp_tabular import bidding_agent_rtb_rl_dp_tabular
@@ -35,13 +36,6 @@ agents_to_execute = ['meta_imitation']
 #agents_to_execute = ['lin', 'rlb_rl_dp_tabular','meta']
 #agents_to_execute = ["rlb_rl_fa"]
 
-total_bids_in_camp_2997 = 156063
-k_shoots_list = [.1, .2, .3, .4, .5, .6, .7, .80, .9, 1]
-k_shoots_list = np.array(k_shoots_list)
-k_shoots_list = k_shoots_list * total_bids_in_camp_2997
-k_shoots_list = k_shoots_list.astype(int)
-
-
 src = "ipinyou"
 
 log_in = open(config.projectPath + "bid-performance/{}_N={}_c0={}_obj={}_clkvp={}.txt"
@@ -59,10 +53,16 @@ if src == "ipinyou":
     data_path = config.ipinyouPath
     max_market_price = config.ipinyou_max_market_price
 
+# Generate testing and training datasets for target campaing.
+camp_to_test = config.ipinyou_camps_to_test[0]
+camp_to_test_file = data_path + camp_to_test + "/test.theta.txt"
+training_filename, testing_filename, len_training, len_testing = generate_training_and_evaluation_files_for_target_camp(camp_to_test_file, 0.8)
+T_shoots_list = [.1, .2, .3, .4, .5, .6, .7, .8, .9, 1]
+T_shoots_list = np.array(T_shoots_list)
+T_shoots_list = T_shoots_list * len_training
+T_shoots_list = T_shoots_list.astype(int)
 
-for k_shoots_learning_size in k_shoots_list:
-
-
+for T_shoots_learning_size in T_shoots_list:
 
     for camp in camps:
         camp_info = config.get_camp_info(camp, src)
@@ -102,7 +102,7 @@ for k_shoots_learning_size in k_shoots_list:
             overall_camp_info['clk_train'] = np.mean(clk_train_list)
             overall_camp_info['imp_train'] = np.mean(imp_train_list)
             overall_camp_info['price_counter_train'] = price_counter_list
-            overall_train_auction_file = merge_files(file_list, aution_in_file, k_shoots_learning_size)
+            overall_train_auction_file = merge_files(file_list, aution_in_file, T_shoots_learning_size)
 
         # Linear-Bid
         if 'lin' in agents_to_execute:
@@ -114,7 +114,7 @@ for k_shoots_learning_size in k_shoots_list:
             training_agent = bidding_agent_linear()
             training_agent.init(train_env, overall_camp_info)
             setting = "{}, camp={}, algo={}, N={}, c0={}, k={}" \
-                .format(src, camp, "lin_bid", N, c0, k_shoots_learning_size)
+                .format(src, camp, "lin_bid", N, c0, T_shoots_learning_size)
             bid_log_path = config.projectPath + "bid-log/{}.txt".format(setting)
 
             if not os.path.exists(data_path + camp + "/train_camp/" + camp + "/bid-model/"):
@@ -124,7 +124,7 @@ for k_shoots_learning_size in k_shoots_list:
             training_agent.parameter_tune(train_opt_obj,  model_path, N, c0, max_market_price,
                                    max_market_price, load=False)
 
-            testing_env = BidEnv(camp_info, aution_in_file)
+            testing_env = BidEnv(camp_info, testing_filename)
             testing_agent = bidding_agent_linear()
             testing_agent.init(testing_env, camp_info)
             testing_agent.parameter_tune(opt_obj, model_path, N, c0, max_market_price,
@@ -153,7 +153,7 @@ for k_shoots_learning_size in k_shoots_list:
             train_agent.init(train_env, overall_camp_info, train_opt_obj, gamma)
 
             setting = "{}, camp={}, algo={}, N={}, c0={}, k={}" \
-                .format(src, camp, "rlb_rl_dp_tabular", N, c0, k_shoots_learning_size)
+                .format(src, camp, "rlb_rl_dp_tabular", N, c0, T_shoots_learning_size)
             bid_log_path = config.projectPath + "bid-log/{}.txt".format(setting)
 
             # Approximating V function
@@ -168,7 +168,7 @@ for k_shoots_learning_size in k_shoots_list:
             #print("END: Approximating V function by dynamic programming.")
 
 
-            testing_env = BidEnv(camp_info, aution_in_file)
+            testing_env = BidEnv(camp_info, testing_filename)
             testing_agent = bidding_agent_rtb_rl_dp_tabular()
             testing_agent.init(testing_env, camp_info, opt_obj, gamma)
             testing_m_pdf = calc_m_pdf(camp_info["price_counter_train"])
@@ -211,7 +211,7 @@ for k_shoots_learning_size in k_shoots_list:
             train_agent.init(train_env, overall_camp_info, train_opt_obj, gamma)
 
             setting = "{}, camp={}, algo={}, N={}, c0={}, k={}" \
-                .format(src, camp, "rlb_rl_fa", N, c0, k_shoots_learning_size)
+                .format(src, camp, "rlb_rl_fa", N, c0, T_shoots_learning_size)
             bid_log_path = config.projectPath + "bid-log/{}.txt".format(setting)
 
             # Approximating D(t,b) function
@@ -344,9 +344,9 @@ for k_shoots_learning_size in k_shoots_list:
             NN_model_path_training = agent.run_meta_training(large_storage_folder, imitation_policy)
             print(str(dt.datetime.now()) + getTime() + ":END meta training")
 
-            # Read K-shoot training entries of the target campaing .
+            # Read T-shoot training entries of the target campaing .
             agent.load_model(NN_model_path_training)
-            NN_model_path_final = agent.run_marginal_meta_training(large_storage_folder, k_shoots_learning_size)
+            NN_model_path_final = agent.run_marginal_meta_training(large_storage_folder, T_shoots_learning_size)
 
             # Read final model and evaluate.
             agent = bidding_agent_meta(camp_info)
@@ -360,10 +360,10 @@ for k_shoots_learning_size in k_shoots_list:
 
             # prepare to run traditional bidding on the meta-trained model.
             setting = "{}, camp={}, algo={}, N={}, c0={}, k={}" \
-                .format(src, actual_camp, "meta_bid", actual_N, c0, k_shoots_learning_size)
+                .format(src, actual_camp, "meta_bid", actual_N, c0, T_shoots_learning_size)
             bid_log_path = config.projectPath + "bid-log/{}.txt".format(setting)
 
-            env = BidEnv(actual_camp_info, actual_aution_in_file)
+            env = BidEnv(actual_camp_info, testing_filename)
 
             (auction, imp, clk, cost) = agent.run(env, bid_log_path, actual_N, c0,
                                                   max_market_price, save_log=True)
@@ -379,7 +379,7 @@ for k_shoots_learning_size in k_shoots_list:
 
         print( " Finish processing camp = {}".format(camp))
 
-    print("Finish processing K shoots = {}".format(k_shoots_learning_size))
+    print("Finish processing K shoots = {}".format(T_shoots_learning_size))
 
 print("Finish processing all camps")
 

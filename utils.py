@@ -183,6 +183,35 @@ def activate_calc(act_func, x):
     else:
         return sigmoid(x)
 
+def generate_training_and_evaluation_files_for_target_camp(target_camp_file, percentage_eval):
+
+    memory = []
+
+    with open(target_camp_file) as f:
+        for line in f:
+            memory.append(line)
+
+    folder = generate_temp_folder()
+    training_filename = folder + "training_file" + str(time.time()) + ".txt"
+    evaluation_filename = folder + "evaluation_file" + str(time.time()) + ".txt"
+
+    cut = len(memory) - int(percentage_eval * len(memory))
+
+    count = 0
+    with open(training_filename, 'w') as filehandle:
+        if count < cut:
+            filehandle.writelines("%s" % place for place in memory)
+            count = count + 1
+    len_training = count
+
+    count = 0
+    with open(evaluation_filename, 'w') as filehandle:
+        filehandle.writelines("%s" % place for place in memory)
+        count = count + 1
+    len_testing = count
+
+    return training_filename, evaluation_filename, len_training, len_testing
+
 def merge_files(files_list, training_file, k_shoots):
 
     memory = []
