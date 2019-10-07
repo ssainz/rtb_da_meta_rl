@@ -94,9 +94,9 @@ def approximate(stop_after_first_it, policy , learning_rate, model, src, camp, N
 
         b_bound = 800
         n_bound = 50
-        max_train_round = 100
+        #max_train_round = 100
         #max_train_round = 1000
-        #max_train_round = 2
+        max_train_round = 1
         final_model_path = NN_model_path
 
         n_sample_size = 50
@@ -157,6 +157,7 @@ def approximate(stop_after_first_it, policy , learning_rate, model, src, camp, N
                 buf_predictions = []
                 buf_labels = []
                 _round = int((len(X_arr) * (1 - eval_n_sample_pct)) / batch_size)
+                #_round = 1
                 # print("_round = {}".format(_round))
                 for _i in range(_round):
 

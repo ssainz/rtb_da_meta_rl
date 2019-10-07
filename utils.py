@@ -186,6 +186,8 @@ def activate_calc(act_func, x):
 def generate_training_and_evaluation_files_for_target_camp(target_camp_file, percentage_eval):
 
     memory = []
+    mem_train = []
+    mem_test = []
 
     with open(target_camp_file) as f:
         for line in f:
@@ -198,17 +200,23 @@ def generate_training_and_evaluation_files_for_target_camp(target_camp_file, per
     cut = len(memory) - int(percentage_eval * len(memory))
 
     count = 0
-    with open(training_filename, 'w') as filehandle:
+    for line in memory:
         if count < cut:
-            filehandle.writelines("%s" % place for place in memory)
-            count = count + 1
-    len_training = count
+            mem_train.append(line)
+            count += 1
+        else:
+            mem_test.append(line)
+            count += 1
 
-    count = 0
+
+    with open(training_filename, 'w') as filehandle:
+        filehandle.writelines("%s" % place for place in mem_train)
+
     with open(evaluation_filename, 'w') as filehandle:
-        filehandle.writelines("%s" % place for place in memory)
-        count = count + 1
-    len_testing = count
+        filehandle.writelines("%s" % place for place in mem_test)
+
+    len_training = len(mem_train)
+    len_testing = len(mem_test)
 
     return training_filename, evaluation_filename, len_training, len_testing
 
@@ -227,6 +235,8 @@ def merge_files(files_list, training_file, k_shoots):
             count += 1
             if count > k_shoots:
                 break
+
+    print("merged file generated, len(memory) = " + str(len(memory)))
 
     folder = generate_temp_folder()
     output_filename = folder + "merged_file_" + str(time.time()) + ".txt"

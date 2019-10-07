@@ -45,5 +45,8 @@ class BidEnv():
 
         done = self._step >= len(self.episodes)
 
+        #if done:
+            #print("DONE! steps is " + str(self._step))
+
         return done, self.theta, self.price, ret_impression, ret_click
 

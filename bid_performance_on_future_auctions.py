@@ -31,8 +31,9 @@ gamma = 1
 #agents_to_execute = ['lin', 'rlb_dp_tabular']
 #agents_to_execute = ['lin','rlb_rl_dp_tabular', "rlb_rl_fa", 'meta']
 #agents_to_execute = ['meta']
-agents_to_execute = ['meta_imitation']
-#agents_to_execute = ['lin', 'rlb_rl_dp_tabular','meta_imitation']
+#agents_to_execute = ['meta_imitation']
+#agents_to_execute = ['lin', 'rlb_rl_dp_tabular']
+agents_to_execute = ['lin']
 #agents_to_execute = ['lin', 'rlb_rl_dp_tabular','meta']
 #agents_to_execute = ["rlb_rl_fa"]
 
@@ -58,9 +59,11 @@ camp_to_test = config.ipinyou_camps_to_test[0]
 camp_to_test_file = data_path + camp_to_test + "/test.theta.txt"
 training_filename, testing_filename, len_training, len_testing = generate_training_and_evaluation_files_for_target_camp(camp_to_test_file, 0.8)
 T_shoots_list = [.1, .2, .3, .4, .5, .6, .7, .8, .9, 1]
+#T_shoots_list = [.1]
 T_shoots_list = np.array(T_shoots_list)
 T_shoots_list = T_shoots_list * len_training
 T_shoots_list = T_shoots_list.astype(int)
+
 
 for T_shoots_learning_size in T_shoots_list:
 
@@ -104,6 +107,7 @@ for T_shoots_learning_size in T_shoots_list:
             overall_camp_info['price_counter_train'] = price_counter_list
             overall_train_auction_file = merge_files(file_list, aution_in_file, T_shoots_learning_size)
 
+
         # Linear-Bid
         if 'lin' in agents_to_execute:
 
@@ -120,7 +124,9 @@ for T_shoots_learning_size in T_shoots_list:
             if not os.path.exists(data_path + camp + "/train_camp/" + camp + "/bid-model/"):
                 os.makedirs(data_path + camp + "/train_camp/" + camp + "/bid-model/")
 
-            model_path = data_path + camp + "/train_camp/" + camp + "/bid-model/{}_{}_{}_{}_{}.pickle".format("lin-bid", N, c0, obj_type, opt_obj.clk_v)
+            model_path = data_path + camp + "/train_camp/" + camp + "/bid-model/{}_{}_{}_{}_{}_{}.pickle".format("lin-bid", N, c0, obj_type, opt_obj.clk_v, T_shoots_learning_size)
+            if os._exists(model_path):
+                os.remove(model_path)
             training_agent.parameter_tune(train_opt_obj,  model_path, N, c0, max_market_price,
                                    max_market_price, load=False)
 
@@ -128,7 +134,7 @@ for T_shoots_learning_size in T_shoots_list:
             testing_agent = bidding_agent_linear()
             testing_agent.init(testing_env, camp_info)
             testing_agent.parameter_tune(opt_obj, model_path, N, c0, max_market_price,
-                                          max_market_price, load=False)
+                                          max_market_price, load=True)
 
             (auction, imp, clk, cost) = testing_agent.run(bid_log_path, N, c0,
                                                     max_market_price,  save_log=False)
@@ -164,7 +170,9 @@ for T_shoots_learning_size in T_shoots_list:
                 os.makedirs(data_path + camp + "/train_camp/" + camp + "/bid-model")
 
             model_path = data_path + camp + "/train_camp/" + camp + "/bid-model/v_nb_N={}.txt".format(N)
-            train_agent.calc_optimal_value_function_with_approximation_i(N, B, max_market_price, train_m_pdf, model_path)
+            if os._exists(model_path):
+                os.remove(model_path)
+            train_agent.calc_optimal_value_function_with_approximation_i(N, train_B, max_market_price, train_m_pdf, model_path)
             #print("END: Approximating V function by dynamic programming.")
 
 
@@ -314,9 +322,11 @@ for T_shoots_learning_size in T_shoots_list:
             # print((not os.path.exists(NN_model_path)) or overwrite)
             # exit()
 
+            #2019/10/05
             if (not os.path.exists(NN_model_path)) or overwrite:
                 print("NN_model_path does not exist")
                 print(NN_model_path)
+                os.remove(NN_model_path)
                 approximate(stop_after_first_it, policy, learning_rate, model, src, camp, N,
                             large_storage_folder, NN_model_path, NN_model_txt_path, opt_obj, camp_info, X, Y)
 
@@ -328,6 +338,7 @@ for T_shoots_learning_size in T_shoots_list:
                 int(np.prod(sampler.envs.action_space.shape)),
                 hidden_sizes=(400,) * 3)
 
+            # 2019/10/05
             imitation_policy.load_state_dict(torch.load(NN_model_path))
             imitation_policy.cuda()
 
